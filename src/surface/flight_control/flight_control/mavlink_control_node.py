@@ -83,11 +83,10 @@ DPAD_UP = 16
 # L2 and R2 1 is not pressed and -1 is pressed
 LJOYX = 0
 LJOYY = 1
-L2PRESS_PERCENT = 2
-RJOYX = 3
-RJOYY = 4
+RJOYX = 2
+RJOYY = 3
+L2PRESS_PERCENT = 4
 R2PRESS_PERCENT = 5
-
 
 CONTROLLER_PROFILE_PARAM = 'controller_profile'
 
