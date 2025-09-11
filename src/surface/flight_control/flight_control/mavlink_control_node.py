@@ -63,19 +63,19 @@ PRESSED = 1
 # Button meanings for PS5 Control might be different for others
 X_BUTTON = 0  # Manipulator 0
 O_BUTTON = 1  # Manipulator 1
-TRI_BUTTON = 3  # Manipulator 2
 SQUARE_BUTTON = 2  # Manipulator 3
-L1 = 9
-R1 = 10
+TRI_BUTTON = 3  # Manipulator 2
 PAIRING_BUTTON = 4
-MENU = 6
 PS_BUTTON = 5
+MENU = 6
 LJOYPRESS = 7
 RJOYPRESS = 8
+L1 = 9
+R1 = 10
+DPAD_UP = 11
+DPAD_DOWN = 12
 DPAD_LEFT = 13
 DPAD_RIGHT = 14
-DPAD_DOWN = 12
-DPAD_UP = 11
 TOUCHPAD = 15
 MUTE = 16
 # Joystick Directions 1 is up/left -1 is down/right
