@@ -1,9 +1,12 @@
 import atexit
 import signal
+from pathlib import Path
 from threading import Thread
 
 import rclpy.utilities
+from ament_index_python import get_package_share_directory
 from PyQt6.QtWidgets import QApplication, QWidget
+from qt_material import apply_stylesheet, list_themes
 from rclpy.executors import MultiThreadedExecutor
 
 from gui.gui_node import GUINode
@@ -29,18 +32,26 @@ class App(QWidget):
         # Kills with Control + C
         signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-        # TODO: New method of dark mode
+        extra_blue = {
+            'success': '#040444',
+            'danger': '#040444',
+            'warning': '#040444'
+        }
+        extra_watermelon = {
+            'success': '#341616',
+            'danger': '#341616',
+            'warning': '#341616'
+        }
         # Apply theme
-        # theme_param = self.theme_param.get_parameter_value().string_value
-        # theme_path = Path(get_package_share_directory('gui')) / 'styles' / (theme_param + '.qss')
+        theme_param = self.theme_param.get_parameter_value().string_value
 
-        # base_theme = 'dark' if theme_param == 'dark' else 'light'
-        # custom_styles = '\n'
-        # if theme_path.exists():
-        #     with theme_path.open(encoding='utf-8') as theme_file:
-        #         custom_styles += theme_file.read()
+        base_theme = 'dark_blue.xml' if theme_param == 'dark' else 'light_blue.xml' if theme_param == 'light' else 'watermelon.xml'
+        if base_theme == 'watermelon.xml':
+            base_theme = Path(get_package_share_directory('gui')) / 'styles' / ('watermelon.xml')
+            base_theme = base_theme.as_posix()
 
-        # qdarktheme.setup_theme(base_theme, additional_qss=custom_styles)
+        extra = extra_watermelon if theme_param == 'watermelon' else extra_blue
+        apply_stylesheet(self, theme=base_theme, extra=extra)
 
         executor = MultiThreadedExecutor()
         executor.add_node(self.node)
