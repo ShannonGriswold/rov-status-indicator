@@ -49,7 +49,7 @@ class App(QWidget):
             base_theme = base_theme.as_posix()
 
         extra = extra_watermelon if theme_param == 'watermelon' else extra_blue
-        apply_stylesheet(self, theme=base_theme, extra=extra)
+        apply_stylesheet(self, theme=base_theme, style='', extra=extra)
 
         executor = MultiThreadedExecutor()
         executor.add_node(self.node)
