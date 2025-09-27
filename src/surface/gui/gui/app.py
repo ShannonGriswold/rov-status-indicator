@@ -37,16 +37,14 @@ class App(QWidget):
         # Apply theme
         theme_param = self.theme_param.get_parameter_value().string_value
 
-        base_theme = (
-            'dark_blue.xml'
-            if theme_param == 'dark'
-            else 'light_blue.xml'
-            if theme_param == 'light'
-            else 'watermelon.xml'
-        )
-        if base_theme == 'watermelon.xml':
-            base_theme = Path(get_package_share_directory('gui')) / 'styles' / ('watermelon.xml')
-            base_theme = base_theme.as_posix()
+        match theme_param:
+            case 'dark':
+                base_theme = 'dark_blue.xml'
+            case 'light':
+                base_theme = 'light_blue.xml'
+            case 'watermelon':
+                base_path = Path(get_package_share_directory('gui')) / 'styles' / ('watermelon.xml')
+                base_theme = base_path.as_posix()
 
         extra = extra_watermelon if theme_param == 'watermelon' else extra_blue
         apply_stylesheet(self, theme=base_theme, style='', extra=extra)
