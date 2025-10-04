@@ -45,6 +45,10 @@ class App(QWidget):
             case 'watermelon':
                 base_path = Path(get_package_share_directory('gui')) / 'styles' / ('watermelon.xml')
                 base_theme = base_path.as_posix()
+            case _:
+                base_theme = 'dark_blue.xml'
+                self.node.get_logger().info('Theme ' + theme_param + ' not found, defaulting to dark.')
+
 
         extra = extra_watermelon if theme_param == 'watermelon' else extra_blue
         apply_stylesheet(self, theme=base_theme, style='', extra=extra)
