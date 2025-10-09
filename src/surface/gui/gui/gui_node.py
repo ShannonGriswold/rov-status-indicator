@@ -115,7 +115,7 @@ class GUINode(Node):
             The timeout between warning logs
         """
         while not client.wait_for_service(timeout):
-            super().get_logger().warning(
+            super().get_logger().warning(  # type: ignore
                 'Service for GUI event client node on topic'
                 f' {client.srv_name} unavailable, waiting again...'
             )

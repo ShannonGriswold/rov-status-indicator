@@ -163,10 +163,10 @@ class VideoWidget(QWidget):
         """Convert from an opencv image to QPixmap."""
         if self.camera_description.type == CameraType.ETHERNET:
             # Switches ethernet's color profile from BayerBGR to BGR
-            cv_img = cv2.cvtColor(cv_img, cv2.COLOR_BAYER_BGGR2BGR)
+            cv_img = cv2.cvtColor(cv_img.astype(int), cv2.COLOR_BAYER_BGGR2BGR)
 
         if self.camera_description.type == CameraType.PHOTOSPHERE:
-            cv_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+            cv_img = cv2.cvtColor(cv_img.astype(int), cv2.COLOR_BGR2RGB)
 
         # Color image
         if len(cv_img.shape) == COLOR:
@@ -185,7 +185,7 @@ class VideoWidget(QWidget):
         else:
             raise ValueError('Somehow not color or grayscale image.')
 
-        qt_image = QImage(cv_img.data, w, h, bytes_per_line, img_format)
+        qt_image = QImage(cv_img.data.tobytes(), w, h, bytes_per_line, img_format)
         qt_image = qt_image.scaled(width, height, Qt.AspectRatioMode.KeepAspectRatio)
 
         return qt_image
@@ -218,7 +218,7 @@ class SwitchableVideoWidget(VideoWidget):
         if isinstance(layout, QVBoxLayout):
             layout.addWidget(self.button, alignment=Qt.AlignmentFlag.AlignCenter)
         else:
-            GUINode().get_logger().error('Missing Layout')
+            GUINode().get_logger().error('Missing Layout')  # type: ignore
 
         self.controller_signal.connect(self.controller_camera_switch)
         self.controller_publisher = GUINode().create_publisher(
@@ -285,7 +285,7 @@ class PauseableVideoWidget(VideoWidget):
         if isinstance(layout, QVBoxLayout):
             layout.addWidget(self.button, alignment=Qt.AlignmentFlag.AlignCenter)
         else:
-            GUINode().get_logger().error('Missing Layout')
+            GUINode().get_logger().error('Missing Layout')  # type: ignore
 
         self.is_paused = False
 
