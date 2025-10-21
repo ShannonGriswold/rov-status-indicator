@@ -154,7 +154,7 @@ class FramePublishers:
 
         # Type narrow to make mypy happy
         if not isinstance(video_frame, depthai.ImgFrame):
-            self.node.get_logger().warn('Dequeued something other than an image frame, skipping')
+            self.node.get_logger().warn('Dequeued something other than an image frame, skipping')  # type: ignore
             return
 
         time_msg = self.node.get_clock().now().to_msg()
@@ -164,7 +164,7 @@ class FramePublishers:
             if topic in self.publishers:
                 self.publishers[topic].publish(img_msg)
             else:
-                self.node.get_logger().warning(
+                self.node.get_logger().warning(  # type: ignore
                     f'Invalid camera publisher topic "{topic.value}", not publishing'
                 )
 
@@ -183,7 +183,7 @@ class FramePublishers:
         Image
             The ROS2 image message
         """
-        inverted_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        inverted_image = cv2.cvtColor(image.astype(int), cv2.COLOR_BGR2RGB)
         img_msg: Image = self.bridge.cv2_to_imgmsg(inverted_image)
         img_msg.encoding = 'rgb8'
         img_msg.header.stamp = time
@@ -244,13 +244,13 @@ class LuxonisCamDriverNode(Node):
                 # / 1000 to get mm
                 self.intrinsics.append(calib_data.getCameraIntrinsics(cam))
                 focal_lengths_mm[i] = self.intrinsics[-1][0][0] * 3 / 1000
-            self.get_logger().info(f'Focal lengths: {focal_lengths_mm}')
+            self.get_logger().info(f'Focal lengths: {focal_lengths_mm}')  # type: ignore
         except IndexError:
-            self.get_logger().warn('Unable to get Luxonis intrinsics. Did you calibrate?')
+            self.get_logger().warn('Unable to get Luxonis intrinsics. Did you calibrate?')  # type: ignore
 
         self.frame_publishers = FramePublishers(self)
 
-        self.get_logger().info('Pipeline created')
+        self.get_logger().info('Pipeline created')  # type: ignore
 
         self.missed_sends = 0
 
@@ -280,7 +280,7 @@ class LuxonisCamDriverNode(Node):
             response.success = False
 
         statuses = [f'{cam}: {meta.enabled}' for cam, meta in self.stream_metas.items()]
-        self.get_logger().info(f'Luxonis now publishing: {"; ".join(statuses)}')
+        self.get_logger().info(f'Luxonis now publishing: {"; ".join(statuses)}')  # type: ignore
 
         return response
 
@@ -366,14 +366,14 @@ while True:
             frame_xout.input.setQueueSize(1)
             script.outputs[stream_meta.script_topics.script_output_name].link(frame_xout.input)
 
-        self.get_logger().info('Deploying pipeline...')
+        self.get_logger().info('Deploying pipeline...')  # type: ignore
 
         # Deploy pipeline to device
         while True:
             try:
                 self.device = depthai.Device(pipeline).__enter__()
             except RuntimeError as e:  # noqa: F841 (unused variable e for optional logging below)
-                self.get_logger().warning(
+                self.get_logger().warning(  # type: ignore
                     'Error uploading to Luxonis cam, retrying '
                     '(see cam_driver to enable more details)...'
                 )
@@ -394,7 +394,7 @@ while True:
             for cam_id, meta in self.stream_metas.items()
         }
 
-        self.get_logger().info('Pipeline deployed')
+        self.get_logger().info('Pipeline deployed')  # type: ignore
 
     def spin(self) -> None:
         """Run one iteration of I/O with the Luxonis cam."""
@@ -440,10 +440,10 @@ while True:
             self.missed_sends = 0
         except RuntimeError:
             self.missed_sends += 1
-            self.get_logger().warn('Missed a dual cam spin')
+            self.get_logger().warn('Missed a dual cam spin')  # type: ignore
 
         if self.missed_sends >= MISSED_SENDS_RESET_THRESHOLD:
-            self.get_logger().error(
+            self.get_logger().error(  # type: ignore
                 f'Missed >= {MISSED_SENDS_RESET_THRESHOLD} dual cam spins, redeploying'
             )
             self.deploy_pipeline()

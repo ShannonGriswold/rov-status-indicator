@@ -6,7 +6,6 @@ import numpy as np
 import rclpy
 from ament_index_python.packages import get_package_share_directory
 from cv_bridge import CvBridge
-from numpy import generic
 from numpy.typing import NDArray
 from rclpy.node import Node
 from rclpy.qos import qos_profile_default
@@ -19,7 +18,7 @@ PROJECTION_PATH = 'src/photosphere/display/projection.jpg'  # relative the rov-2
 WEBSERVER_PATH = 'src/photosphere/display/'  # relative the rov-25 repo
 
 
-Matlike = NDArray[generic]
+Matlike = NDArray[np.generic]
 
 
 class Photosphere(Node):
@@ -87,16 +86,16 @@ class Photosphere(Node):
             The filled response
         """
         projection = convert_with_matrix(self.fisheye_frames[0], self.fisheye_frames[1])
-        self.get_logger().info('Projection created')
+        self.get_logger().info('Projection created')  # type: ignore
         cv2.imwrite(
             str(
                 Path(get_package_share_directory('photosphere').split('rov-25')[0])
                 / 'rov-25'
                 / PROJECTION_PATH
             ),
-            projection,
+            projection.astype(int),
         )
-        self.get_logger().info('Projection saved')
+        self.get_logger().info('Projection saved')  # type: ignore
 
         response.generated = True
         return response

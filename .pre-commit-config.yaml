@@ -34,4 +34,3 @@ repos:
           - types-requests
           - PyQt6
           - opencv-python
-          - rclpy
