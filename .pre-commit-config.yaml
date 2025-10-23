@@ -33,4 +33,5 @@ repos:
         additional_dependencies:
           - types-requests
           - PyQt6-stubs
-          - opencv-python
+          - opencv-stubs
+          - numpy
