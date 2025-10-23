@@ -148,4 +148,4 @@ class InteractiveTimer(QWidget):
             The ROS response sent by the timer node.
         """
         if not res.success:
-            GUINode().get_logger().error('Failed to set timer')  # type: ignore
+            GUINode().get_logger().error('Failed to set timer')

@@ -29,9 +29,10 @@ repos:
     rev: v1.18.2
     hooks:
       - id: mypy
-        args: [--strict, --ignore-missing-imports]
+        args: [--strict, --ignore-missing-imports, --explicit-package-bases]
         additional_dependencies:
           - types-requests
           - PyQt6-stubs
           - opencv-stubs
           - numpy
+          - types-paramiko

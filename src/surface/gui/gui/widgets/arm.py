@@ -71,7 +71,7 @@ class Arm(QWidget):
     @pyqtSlot(VehicleArming.Response)
     def arm_status(self, res: VehicleArming.Response) -> None:
         if not res or not res.message_sent:
-            GUINode().get_logger().warning('Failed to arm or disarm.')  # type: ignore
+            GUINode().get_logger().warning('Failed to arm or disarm.')
 
     @pyqtSlot(VehicleState)
     def vehicle_state_callback(self, msg: VehicleState) -> None:

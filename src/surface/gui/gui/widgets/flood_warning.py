@@ -12,7 +12,7 @@ from gui.widgets.circle import CircleIndicator
 from rov_msgs.msg import Flooding
 
 # The 'Loop' enum has int values, not 'Loop', unbeknownst to mypy
-Q_SOUND_EFFECT_LOOP_FOREVER: int = QSoundEffect.Loop.Infinite.value  # type: ignore[assignment]
+Q_SOUND_EFFECT_LOOP_FOREVER: int = QSoundEffect.Loop.Infinite.value  # [assignment]
 
 
 class FloodWarning(QWidget):
@@ -53,7 +53,7 @@ class FloodWarning(QWidget):
     def refresh(self, msg: Flooding) -> None:
         if msg.flooding:
             self.indicator.setText('FLOODING')
-            GUINode().get_logger().error('Robot is actively flooding, do something!')  # type: ignore
+            GUINode().get_logger().error('Robot is actively flooding, do something!')
             self.warning_msg_latch = True
             self.indicator_circle.set_state(WidgetState.OFF)
 
@@ -64,6 +64,6 @@ class FloodWarning(QWidget):
             self.indicator.setText('No Water present')
             self.indicator_circle.set_state(WidgetState.ON)
             if self.warning_msg_latch:
-                GUINode().get_logger().warning('Robot flooding has reset itself.')  # type: ignore
+                GUINode().get_logger().warning('Robot flooding has reset itself.')
                 self.warning_msg_latch = False
                 self.alarm_sound.setLoopCount(0)
