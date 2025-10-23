@@ -32,5 +32,5 @@ repos:
         args: [--strict, --ignore-missing-imports]
         additional_dependencies:
           - types-requests
-          - PyQt6
+          - PyQt6-stubs
           - opencv-python
