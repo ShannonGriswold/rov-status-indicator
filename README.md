@@ -1,36 +1,49 @@
 # MATE ROV 2025-26
 
-[![Continuous Integration](https://github.com/CWRUbotix/rov-25/actions/workflows/industrial_ci_action.yml/badge.svg)](https://github.com/CWRUbotix/rov-25/actions/workflows/industrial_ci_action.yml)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/CWRUbotix/rov-25/main.svg)](https://results.pre-commit.ci/latest/github/CWRUbotix/rov-25/main)
+[![Continuous Integration](https://github.com/CWRUbotix/rov-26/actions/workflows/industrial_ci_action.yml/badge.svg)](https://github.com/CWRUbotix/rov-26/actions/workflows/industrial_ci_action.yml)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/CWRUbotix/rov-26/main.svg)](https://results.pre-commit.ci/latest/github/CWRUbotix/rov-26/main)
 [![Apache License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-# Table of Contents
-
+## Table of Contents
 1. [Setup](#setup)
-    1. [Linux](#linux)
-        1. [Bare Metal](#bare-metal)
-        2. [Docker](#docker)
-    2. [Windows](#windows)
-        1. [Dual Boot](#dual-boot)
-        2. [WSL](#wsl)
-        3. [Docker](#docker-1)
-    3. [macOS](#macos)
-        1. [Docker](#docker-2)
-        2. [UTM](#utm)
-2. [Test Your Environment](#test-your-environment)
-3. [Run Our Code](#run-our-code)
-4. [Directory Structure](#directory-structure)
-5. [Documentation Structure](#documentation-structure)
+    1. [Clone the Repository](#clone-the-repository)
+    2. [Run Our Code](#run-our-code)
+    3. [First Time Setup](#first-time-setup)
+        1. [Get Ubuntu](#get-ubuntu)
+            1. [Linux](#linux)
+                1. [Bare Metal](#bare-metal)
+                2. [Docker](#docker)
+            2. [Windows](#windows)
+                1. [Dual Boot](#dual-boot)
+                2. [WSL](#wsl)
+                3. [Docker](#docker-1)
+            3. [macOS](#macos)
+                1. [Docker](#docker-2)
+                2. [UTM](#utm)
+        2. [Setup IDE](#setup-ide)
+        3. [Setup Surface Environment](#setup-surface-environment)
+        4. [Test Your Environment](#test-your-environment)
+    4. [Upgrading Environment](#upgrading-environment)
+2. [Structure](#structure)
+    1. [Directory Structure](#directory-structure)
+    2. [Namespaces](#namespaces)
+    3. [Documentation Structure](#documentation-structure)
+3. [Axis Orientation](#axis-orientation)
+5. [Unit Tests](#unit-tests)
+6. [Development On Shared Devices](#development-on-shared-devices)
 
-## Setup
 
+# Setup
+If this is your first time cloning our repository on your laptop, please follow [First Time Setup](#first-time-setup).
+
+## Clone the Repository
 If you have GitHub Desktop, click the green `Code` button above, then `Open with GitHub Desktop`.
 
 If you have the Git CLI, start by opening up a terminal, navigating to where you want the code to be saved, and entering the following command:
 
 ```bash
-git clone --recurse-submodules git@github.com:CWRUbotix/rov-25.git
+git clone --recurse-submodules git@github.com:CWRUbotix/rov-26.git
 ```
 
 > For already cloned repos, make sure you download submodules:
@@ -38,24 +51,45 @@ git clone --recurse-submodules git@github.com:CWRUbotix/rov-25.git
 > git submodule update --init --recursive
 > ```
 
-If you've never contributed to a git repository before, you might receive an error message saying you don't have access. In that case visit [this tutorial](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/about-ssh) to set up SSH for local GitHub access.
+If you've never contributed to a git repository before on this laptop or environment, you might receive an error message saying you don't have access. In that case visit [this tutorial](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/about-ssh) to set up SSH for local GitHub access.
 
-After cloning the code, we need to set up our IDE: VSCode. If you already have it, great. Otherwise follow [this](https://code.visualstudio.com/download) tutorial. We recommend installing the mypy and autoDocstring VSCode extensions. Our autoDocstring settings are `Docstring Format: Numpy` and `Start On New Line: Start docstring on new line`.
+After cloning the repository build the workspace and install the dependencies.
+- Press `F1` or `ctrl` `shift` `p`, choose `Tasks: Run Task`, then choose `[ROS] 🏃‍ Install Dependencies & Build Workspace`
 
-Now select the guide below that fits your operating system. Some operating systems have multiple options. Here are our recommended installation options:
- - **Linux**: If you have the latest Ubuntu LTS, use the Bare Metal installation. Otherwise you'll need to do the Docker install.
- - **Windows**: You should create a dual boot, then follow the Linux instructions for your new Ubuntu OS. Otherwise, we recommend using WSL, although Docker has similar capabilities.
- - **MacOS**: We recommend using Docker. UTM should theoretically have more capabilities than Docker, but it has a long setup time and we're not sure it works.
+## Run Our Code
 
-Once you're finished setting up, go to the [Test Your Environment](#test-your-environment) section to confirm everything's working, then [Run Our Code](#run-our-code)!
+Perform one of these options in VSCode to build the codebase:
+ - Press `ctrl` `shift` `b`
+ - Press `F1` or `ctrl` `shift` `p`, choose `Tasks: Run Task`, then choose `[ROS] 🏃‍ Build Workspace`
 
-### Linux
+The magic of symlinks should mean you won't need to build again for most things, but you'll need to build every time you change a package's `setup.py` or anything in the `rov_msgs` package.
 
-#### Bare Metal (Ubuntu only)
+If that works, source your workspace to tell ROS to look for packages in your current workspace:
 
-To run the install script, open the repository with VSCode. Then use `F1` or `ctrl+shift+p` to open the command bar and select `Tasks: Run Task`. Then from the Task selection choose `[SETUP] Surface Environment`. This will install ROS and all our dependencies.
+```bash
+. install/setup.sh
+```
 
-#### Docker (all distros, probably)
+Then try launching our GUI:
+
+```bash
+ros2 launch surface_main surface_all_nodes_launch.py
+```
+
+## First Time Setup
+### Get Ubuntu
+To run our code you need an environment with Ubuntu 24. Select the guide below that fits your operating system. Some operating systems have multiple options. Here are our recommended installation options:
+ - **[Linux](#linux)**: If you have the latest Ubuntu LTS, use the Bare Metal installation. Otherwise you'll need to do the Docker install.
+ - **[Windows](#windows)**: You should create a dual boot, then follow the Linux instructions for your new Ubuntu OS. Otherwise, we recommend using WSL, although Docker has similar capabilities.
+ - **[MacOS](#macos)**: We recommend using Docker. UTM should theoretically have more capabilities than Docker, but it has a long setup time and we're not sure it works.
+
+#### Linux
+
+##### Bare Metal (Ubuntu 24 only)
+
+You can continue to [Setup IDE](#setup-ide)
+
+##### Docker (all distros, probably)
 
 Start by installing docker engine from [here](https://docs.docker.com/engine/install/ubuntu/).
 
@@ -63,19 +97,21 @@ Set your permissions based on [this](https://docs.docker.com/engine/install/linu
 
 Restart.
 
+Follow the instructions to [Clone the Repository](#clone-the-repository) and [Setup the IDE](#setup-the-ide) before continuing.
+
 Then install the Dev Containers VSCode extension.
 
 To open the container, open the repository with VSCode. Then use `F1` or `ctrl+shift+p` to open the command bar and select `Tasks: Run Task`. Then from the Task selection choose `Docker Rebuild`. This will build and run the docker container. Make sure to choose `ROV Linux` for which type to run (you might have to wait a while for things to download before this option is presented at the top of your screen).
 
 Now you should be in your Docker container in VSCode.
 
-To reopen the container after you close it, go to `File` > `Open Recent` > `/stuff/rov-25 [Dev Container]`
+To reopen the container after you close it, go to `File` > `Open Recent` > `/stuff/rov-26 [Dev Container]`
 
 For gui apps run `xhost + local:docker` before launching docker or add to `.bashrc`.
 
-### Windows
+#### Windows
 
-#### Dual Boot
+##### Dual Boot
 
 Creating a dual boot allows you to install two different operating systems to your device. You can then switch between them when your computer boots. Once you have a dual boot set up, this is by far the easiest and most error-free option. You'll also find that many CS courses are easier once you have easy access to a full Linux OS.
 
@@ -83,21 +119,23 @@ Creating a dual boot allows you to install two different operating systems to yo
 
 You might need to [disable secure boot](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/disabling-secure-boot?view=windows-11), but try without doing that first. If you get secure boot errors later in the installation, that might be because you chose to [install third party drivers](https://askubuntu.com/questions/1513173/do-i-need-to-disable-secure-boot-to-install-ubuntu-24-04).
 
-Once you have Ubuntu set up, follow the [Bare Metal (Ubuntu only)](#bare-metal-ubuntu-only) instructions in that OS.
-
-#### WSL
+##### WSL
 
 Follow [this](https://learn.microsoft.com/en-us/windows/wsl/install) guide to install WSL.
 
-After WSL has been installed follow [this](https://code.visualstudio.com/docs/remote/wsl) guide to get VSCode and WSL to properly communicate and navigate to the rov-25 folder.
+You need to download Ubuntu 24, so you should run the following command to change the linux distribution that is installed.
 
-Then run the install script.
+```bash
+wsl.exe --install Ubuntu-24.04
+```
 
-To run the install script, open the repository with VSCode. Then use `F1` or `ctrl+shift+p` to open the command bar and select `Tasks: Run Task`. Then from the Task selection choose `[SETUP] Surface Environment`. This will install ROS and all our dependencies.
+After WSL has been installed follow [this](https://code.visualstudio.com/docs/remote/wsl) guide to get VSCode and WSL to properly communicate and navigate to the rov-26 folder.
 
-#### Docker
+##### Docker
 
 Start by installing docker from [here](https://www.docker.com/get-started/).
+
+Follow the instructions to [Clone the Repository](#clone-the-repository) and [Setup the IDE](#setup-the-ide) before continuing.
 
 Then install the Dev Containers VSCode extension.
 
@@ -105,7 +143,7 @@ To open the container, open the repository with VSCode. Then use `F1` or `ctrl+s
 
 Now you should be in your Docker container in VSCode.
 
-To reopen the container after you close it, go to `File` > `Open Recent` > `/stuff/rov-25 [Dev Container]`
+To reopen the container after you close it, go to `File` > `Open Recent` > `/stuff/rov-26 [Dev Container]`
 
 To add your Git SSH keys into the container follow [this](https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials) guide.
 
@@ -123,11 +161,13 @@ Then open up Command Prompt and type `ipconfig`.
 
 Then in the terminal of the docker container use `export DISPLAY={IPv4 of WSL}:0.0` where the IPV4 is from the `ipconfig` command.
 
-### macOS
+#### macOS
 
-#### Docker
+##### Docker
 
 First, install Docker from [here](https://www.docker.com/get-started/).
+
+Follow the instructions to [Clone the Repository](#clone-the-repository) and [Setup the IDE](#setup-the-ide) before continuing.
 
 Then install the `Dev Containers` extension inside VSCode.
 
@@ -156,15 +196,13 @@ To open the container, open our repository with VSCode. Then use `F1` or `comman
 
 Now you should be in your Docker container in VSCode.
 
-To reopen the container after you close it, go to `File` > `Open Recent` > `/stuff/rov-25 [Dev Container]`.
+To reopen the container after you close it, go to `File` > `Open Recent` > `/stuff/rov-26 [Dev Container]`.
 
 > Note for folks who eventually try running the simulation: XQuartz might not be able to support OpenGL applications like our simulation. [Apparently there's a flag](https://unix.stackexchange.com/questions/429760/opengl-rendering-with-x11-forwarding) to enable OpenGL rendering as late at XQuartz 2.7.11, but that version might be too old to run on your Mac.
 
 <!-- https://gist.github.com/cschiewek/246a244ba23da8b9f0e7b11a68bf3285 -->
 
-#### UTM
-
-> BEWARE! We haven't fully tested this option.
+##### UTM
 
 [UTM](https://docs.getutm.app/installation/macos/) is a virtualization software. It allows you to create "virtual machines" (sometimes called "guests") which can run other operating systems. Visit [UTM](https://docs.getutm.app/installation/macos/) and hit "Download from GitHub" (downloading from the App Store costs money).
 
@@ -173,7 +211,6 @@ As mentioned in this [StackExchange](https://apple.stackexchange.com/questions/4
 If you have Apple silicon (an M1, M2, etc.):
  - Download a disk image of [Ubuntu 24.04 Server for ARM64](https://ubuntu.com/download/server/arm).
  - [This Youtube video](https://www.youtube.com/watch?v=JrNS3brSnmA) provides a good tutorial on what to do next.
- - Once the installation is complete, follow the instructions in this README for [Bare Metal (Ubuntu only)](#bare-metal-ubuntu-only).
  - You'll probably run into issues with our packages being built for AMD64 instead of ARM64. This is an uninvestigated problem, but emulating AMD64 on ARM Macs is too slow to be feasible.
 
 If you have a different (i.e. Intel) CPU:
@@ -188,10 +225,16 @@ If you have a different (i.e. Intel) CPU:
    - If you have a directory you want to mount in the VM (so you can share files between your MacOS filesystem and the virtual machine's filesystem), you can select it here. The shared directory will be available after installing SPICE tools (see [here](https://docs.getutm.app/guest-support/linux/) to install SPICE Agent and SPICE WebDAV). If you don't understand what's going on here, don't change anything. Press `Continue` to continue.
    - Press `Save` to create the VM and press the play button to start the VM.
    - Go through the Ubuntu installer. If the reboot fails, you can manually quit the VM, unmount the installer ISO, and start the VM again to boot into your new installation.
- - Once the installation is complete, follow the instructions in this README for [Bare Metal (Ubuntu only)](#bare-metal-ubuntu-only).
 
+### Setup IDE
+We need to set up our IDE: VSCode. If you already have it, great. Otherwise follow [this](https://code.visualstudio.com/download) tutorial. We recommend installing the mypy and autoDocstring VSCode extensions. Our autoDocstring settings are `Docstring Format: Numpy` and `Start On New Line: Start docstring on new line`.
 
-## Test Your Environment
+### Setup Surface Environment
+Before this step, please follow the instructions to [Clone the Repository](#clone-the-repository) if you haven't yet, then return to this step to finish the first time setup.
+
+To run the install script, open the repository with VSCode. Then use `F1` or `ctrl+shift+p` to open the command bar and select `Tasks: Run Task`. Then from the Task selection choose `[SETUP] Surface Environment`. This will install ROS and all our dependencies.
+
+### Test Your Environment
 
 After setting up your environment, open a terminal (make sure it's in VSCode if you're using Docker) and run an example publisher node:
 
@@ -207,53 +250,13 @@ ros2 run demo_nodes_py listener
 
 If the listener receives the messages published by the talker, then ROS was successfully installed on your system.
 
-
-## Run Our Code
-
-Perform one of these options in VSCode to build the codebase:
- - Press `ctrl` `shift` `b`
- - Press `F1` or `ctrl` `shift` `p`, choose `Tasks: Run Task`, then choose `[ROS] 🏃‍ Build Workspace`
-
-The magic of symlinks should mean you won't need to build again for most things, but you'll need to build every time you change a package's `setup.py` or anything in the `rov_msgs` package.
-
-If that works, source your workspace to tell ROS to look for packages in your current workspace:
-
-```bash
-. install/setup.sh
-```
-
-Then try launching our GUI:
-
-```bash
-ros2 launch surface_main surface_all_nodes_launch.py
-```
-
-
-## Unit tests
-
-To test, perform one of these options in VSCode:
- - Press `F1` or `ctrl` `shift` `p` and choose `Tasks: Run Test Task`
- - Run `colcon test --event-handlers=console_direct+`
-
-The runs the tests and pipes the output to the terminal. To test `pi_main` make sure to type your password into the terminal after doing either option..
-
-Installing the mypy extension should help enforce our linters.
-
-<!-- ### Automatic building for non-VSCode heathens
-
-Run this command from your workspace folder
-
-The magic of symlink should mean you won't need to build again for most
-things, but if you're working on package metadata (e.g. `package.xml`) or
-rov_msgs, you'll need to run this every time you change something:
-
-```bash
-. src/.vscode/easy_build.sh
-``` -->
+After this you should be ready to [Run Our Code](#run-our-code).
 
 ## Upgrading Environment
 
 If you are upgrading to a newer ROS version make sure to remove `source /opt/ros/$PREVIOUS_ROS_DISTRO/setup.bash`. If you are using Docker you can simply build the new container and delete the old one.
+
+# Structure
 
 ## Directory Structure
 
@@ -302,11 +305,33 @@ def __init__(self, srv_type: SrvType, topic: str, signal: pyqtBoundSignal,
         """
 ```
 
-## Axis Orientation
+# Axis Orientation
 For the ROV:
  - +X is forward
  - +Y is left
  - +Z is up
 
-## Development on shared devices
-For competition/bay laptops, install [deploy keys](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys#deploy-keys) for the necessary repos rather than using one random person's Github SSH keys. Our keys are stored in the private [rov-keys](https://github.com/CWRUbotix/rov-keys) repo. The settings for deploy keys for this repo are [here](https://github.com/CWRUbotix/rov-25/settings/keys).
+# Unit tests
+
+To test, perform one of these options in VSCode:
+ - Press `F1` or `ctrl` `shift` `p` and choose `Tasks: Run Test Task`
+ - Run `colcon test --event-handlers=console_direct+`
+
+The runs the tests and pipes the output to the terminal. To test `pi_main` make sure to type your password into the terminal after doing either option..
+
+Installing the mypy extension should help enforce our linters.
+
+<!-- ### Automatic building for non-VSCode heathens
+
+Run this command from your workspace folder
+
+The magic of symlink should mean you won't need to build again for most
+things, but if you're working on package metadata (e.g. `package.xml`) or
+rov_msgs, you'll need to run this every time you change something:
+
+```bash
+. src/.vscode/easy_build.sh
+``` -->
+
+# Development on shared devices
+For competition/bay laptops, install [deploy keys](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys#deploy-keys) for the necessary repos rather than using one random person's Github SSH keys. Our keys are stored in the private [rov-keys](https://github.com/CWRUbotix/rov-keys) repo. The settings for deploy keys for this repo are [here](https://github.com/CWRUbotix/rov-26/settings/keys).
