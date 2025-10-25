@@ -86,7 +86,7 @@ class Photosphere(Node):
             The filled response
         """
         projection = convert_with_matrix(self.fisheye_frames[0], self.fisheye_frames[1])
-        self.get_logger().info('Projection created')  # type: ignore
+        self.get_logger().info('Projection created')
         cv2.imwrite(
             str(
                 Path(get_package_share_directory('photosphere').split('rov-25')[0])
@@ -95,7 +95,7 @@ class Photosphere(Node):
             ),
             projection.astype(int),
         )
-        self.get_logger().info('Projection saved')  # type: ignore
+        self.get_logger().info('Projection saved')
 
         response.generated = True
         return response

@@ -61,7 +61,7 @@ class PhotosphereDriverNode(Node):
             / LOCAL_PATH
         )
 
-        self.get_logger().info('Ready to download photosphere images')  # type: ignore
+        self.get_logger().info('Ready to download photosphere images')
 
     def take_photos_callback(
         self, request: TakePhotosphere.Request, response: TakePhotosphere.Response
@@ -88,26 +88,26 @@ class PhotosphereDriverNode(Node):
         try:
             ssh_client.connect(HOST, username=USER, password=PASSWORD, timeout=CONNECT_TIMEOUT)
         except (TimeoutError, paramiko.ssh_exception.NoValidConnectionsError):
-            self.get_logger().error('Failed to connect to photosphere sensor')  # type: ignore
+            self.get_logger().error('Failed to connect to photosphere sensor')
             response = TakePhotosphere.Response()
             response.success = False
             response.cam = request.cam
             return response
 
-        self.get_logger().info('Connected to Calamari')  # type: ignore
+        self.get_logger().info('Connected to Calamari')
 
         _, ssh_stdout, _ = ssh_client.exec_command(TAKE_PICS_CMDS[request.cam])
         ssh_stdout.channel.set_combine_stderr(True)
 
         for line in ssh_stdout:
-            self.get_logger().info(line.strip())  # type: ignore
+            self.get_logger().info(line.strip())
 
         ftp_client = ssh_client.open_sftp()
 
         for filename in PIC_FILE_NAMES[request.cam]:
             ftp_client.get(str(Path(REMOTE_PATH) / filename), str(Path(LOCAL_PATH) / filename))
 
-        self.get_logger().info('Images downloaded from Calamari')  # type: ignore
+        self.get_logger().info('Images downloaded from Calamari')
 
         for filename in PIC_FILE_NAMES[request.cam]:
             img = cv2.imread(str(Path(LOCAL_PATH) / filename))

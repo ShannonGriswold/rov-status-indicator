@@ -24,13 +24,13 @@ def set_dims(vid: cv2.VideoCapture, width: int, height: int) -> None:
 #     Interval: Discrete 0.067s (15.000 fps)
 
 
-vid = cv2.VideoCapture('/dev/video0')
+vid = cv2.VideoCapture()  # ('/dev/video0')
 # vid.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
 # vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 3032)
 # print(vid.get(cv2.CAP_PROP_FOURCC))
 # vid.set(cv2.CAP_PROP_FOURCC, '')
-mjpg = cv2.VideoWriter.fourcc('M', 'J', 'P', 'G')
-yuyv = cv2.VideoWriter.fourcc('Y', 'U', 'Y', 'V')
+mjpg = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
+yuyv = cv2.VideoWriter_fourcc('Y', 'U', 'Y', 'V')
 print('MJPG ==', mjpg)
 print('YUYV ==', yuyv)
 print('cam ==', vid.get(cv2.CAP_PROP_FOURCC))
