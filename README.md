@@ -211,6 +211,8 @@ As mentioned in this [StackExchange](https://apple.stackexchange.com/questions/4
 If you have Apple silicon (an M1, M2, etc.):
  - Download a disk image of [Ubuntu 24.04 Server for ARM64](https://ubuntu.com/download/server/arm).
  - [This Youtube video](https://www.youtube.com/watch?v=JrNS3brSnmA) provides a good tutorial on what to do next.
+     - At 3:20, the video says to enable hardware OpenGL acceleration. When testing, we've had issues with popup menus causing apps to fail to render, so it is probably safer to leave this unchecked. 
+ - After finishing the installation, if Ubuntu gets stuck while booting for a long time, follow the instructions from [UTM's guide](https://docs.getutm.app/guides/ubuntu/#black-screen-or-stuck-during-boot-for-a-long-period)
  - You'll probably run into issues with our packages being built for AMD64 instead of ARM64. This is an uninvestigated problem, but emulating AMD64 on ARM Macs is too slow to be feasible.
 
 If you have a different (i.e. Intel) CPU:
