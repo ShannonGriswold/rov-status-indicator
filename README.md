@@ -135,7 +135,7 @@ After WSL has been installed follow [this](https://code.visualstudio.com/docs/re
 
 Start by installing docker from [here](https://www.docker.com/get-started/).
 
-Follow the instructions to [Clone the Repository](#clone-the-repository) and [Setup the IDE](#setup-the-ide) before continuing.
+Follow the instructions to [Clone the Repository](#clone-the-repository) and [Setup the IDE](#setup-ide) before continuing.
 
 Then install the Dev Containers VSCode extension.
 
@@ -167,7 +167,7 @@ Then in the terminal of the docker container use `export DISPLAY={IPv4 of WSL}:0
 
 First, install Docker from [here](https://www.docker.com/get-started/).
 
-Follow the instructions to [Clone the Repository](#clone-the-repository) and [Setup the IDE](#setup-the-ide) before continuing.
+Follow the instructions to [Clone the Repository](#clone-the-repository) and [Setup the IDE](#setup-ide) before continuing.
 
 Then install the `Dev Containers` extension inside VSCode.
 
