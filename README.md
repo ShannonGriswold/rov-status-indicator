@@ -12,14 +12,14 @@
     3. [First Time Setup](#first-time-setup)
         1. [Get Ubuntu](#get-ubuntu)
             1. [Linux](#linux)
-                1. [Bare Metal](#bare-metal)
-                2. [Docker](#docker)
+                1. [Bare Metal](#bare-metal-ubuntu-24-only)
+                2. [Docker](#docker-all-distros-probably)
             2. [Windows](#windows)
                 1. [Dual Boot](#dual-boot)
                 2. [WSL](#wsl)
-                3. [Docker](#docker-1)
+                3. [Docker](#docker)
             3. [macOS](#macos)
-                1. [Docker](#docker-2)
+                1. [Docker](#docker-1)
                 2. [UTM](#utm)
         2. [Setup IDE](#setup-ide)
         3. [Setup Surface Environment](#setup-surface-environment)
@@ -53,7 +53,7 @@ git clone --recurse-submodules git@github.com:CWRUbotix/rov-26.git
 
 If you've never contributed to a git repository before on this laptop or environment, you might receive an error message saying you don't have access. In that case visit [this tutorial](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/about-ssh) to set up SSH for local GitHub access.
 
-After cloning the repository build the workspace and install the dependencies.
+After cloning the repository, build the workspace and install the dependencies.
 - Press `F1` or `ctrl` `shift` `p`, choose `Tasks: Run Task`, then choose `[ROS] 🏃‍ Install Dependencies & Build Workspace`
 
 ## Run Our Code
@@ -78,7 +78,7 @@ ros2 launch surface_main surface_all_nodes_launch.py
 
 ## First Time Setup
 ### Get Ubuntu
-To run our code you need an environment with Ubuntu 24. Select the guide below that fits your operating system. Some operating systems have multiple options. Here are our recommended installation options:
+To run our code, you need an environment with Ubuntu 24. Select the guide below that fits your operating system. Some operating systems have multiple options. Here are our recommended installation options:
  - **[Linux](#linux)**: If you have the latest Ubuntu LTS, use the Bare Metal installation. Otherwise you'll need to do the Docker install.
  - **[Windows](#windows)**: You should create a dual boot, then follow the Linux instructions for your new Ubuntu OS. Otherwise, we recommend using WSL, although Docker has similar capabilities.
  - **[MacOS](#macos)**: We recommend using Docker. UTM should theoretically have more capabilities than Docker, but it has a long setup time and we're not sure it works.
@@ -97,7 +97,7 @@ Set your permissions based on [this](https://docs.docker.com/engine/install/linu
 
 Restart.
 
-Follow the instructions to [Clone the Repository](#clone-the-repository) and [Setup the IDE](#setup-the-ide) before continuing.
+Follow the instructions to [Clone the Repository](#clone-the-repository) and [Setup the IDE](#setup-ide) before continuing.
 
 Then install the Dev Containers VSCode extension.
 
@@ -319,7 +319,7 @@ To test, perform one of these options in VSCode:
  - Press `F1` or `ctrl` `shift` `p` and choose `Tasks: Run Test Task`
  - Run `colcon test --event-handlers=console_direct+`
 
-The runs the tests and pipes the output to the terminal. To test `pi_main` make sure to type your password into the terminal after doing either option..
+This runs the tests and pipes the output to the terminal. To test `pi_main`, make sure to type your password into the terminal after doing either option.
 
 Installing the mypy extension should help enforce our linters.
 
