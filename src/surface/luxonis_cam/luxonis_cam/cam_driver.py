@@ -297,18 +297,37 @@ class LuxonisCamDriverNode(Node):
 
     def deploy_pipeline(self) -> None:
         """Create a depthai pipeline and deploy it to the camera."""
-        pipeline = depthai.Pipeline()
+        self.pipeline = depthai.Pipeline()
 
-        left_cam_node = pipeline.createColorCamera()
-        left_cam_node.setBoardSocket(LEFT_CAM_SOCKET)
-        left_cam_node.setResolution(depthai.ColorCameraProperties.SensorResolution.THE_800_P)
+        left_cam_node = self.pipeline.create(depthai.node.Camera).build(LEFT_CAM_SOCKET, sensorResolution=(1280,800))
+        right_cam_node = self.pipeline.create(depthai.node.Camera).build(RIGHT_CAM_SOCKET, sensorResolution=(1280,800))
 
-        right_cam_node = pipeline.createColorCamera()
-        right_cam_node.setBoardSocket(RIGHT_CAM_SOCKET)
-        right_cam_node.setResolution(depthai.ColorCameraProperties.SensorResolution.THE_800_P)
         right_cam_node.initialControl.setMisc('3a-follow', depthai.CameraBoardSocket.CAM_D.value)
 
-        script = pipeline.createScript()
+        script = self.pipeline.create(depthai.node.Script)
+
+        # connects left_cam_node and right_cam_node to script inputs
+        for node, meta in zip(
+            (left_cam_node, right_cam_node),
+            [self.stream_metas[cam_id] for cam_id in (CAM_IDS.LUX_LEFT, CAM_IDS.LUX_RIGHT)],
+            strict=True,
+        ):
+            input_name = meta.script_topics.script_input_name
+            node.requestOutput((FRAME_WIDTH, FRAME_HEIGHT), type = depthai.ImgFrame.Type.RGB888p).link(script.inputs[input_name])
+            script.inputs[input_name].setBlocking(False)
+            script.inputs[input_name].setMaxSize(1)
+
+        # create toggle input queues
+        self.toggle_queues = {}
+        for cam_id, meta in self.stream_metas.items():
+            input_queue= script.inputs[meta.script_topics.toggle_in_stream_name].createInputQueue(maxSize=1)
+            self.toggle_queues[cam_id] = input_queue
+
+        # Link script outputs to stream_meta outputs
+        self.frame_output_queues = {}
+        for cam_id, stream_meta in self.stream_metas.items():
+            output_queue= script.outputs[stream_meta.script_topics.script_output_name].createOutputQueue(maxSize=1, blocking=False)
+            self.frame_output_queues[cam_id]=output_queue
 
         # top part creates a list of which script topics are enabled, where to get the toggle values, where to get the frames from if enabled, and where to output the frames to
         # Loops through each script topic and if there is data for the toggle it uses that to set enabled
@@ -322,47 +341,25 @@ frame_outputs = ["{'", "'.join([names.script_output_name for names in self.scrip
 while True:
     for i, (toggle_input, frame_input, frame_output) in enumerate(zip(toggle_inputs, frame_inputs,
                                                                       frame_outputs)):
-        toggle_msg = node.io[toggle_input].tryGet()
+        toggle_msg = node.inputs[toggle_input].tryGet()
         if toggle_msg is not None:
             enabled_flags[i] = toggle_msg.getData()[0]
 
-        frame = node.io[frame_input].tryGet()
+        frame = node.inputs[frame_input].tryGet()
 
         if frame is not None and enabled_flags[i]:
-            node.io[frame_output].send(frame)
+            node.outputs[frame_output].send(frame)
 """
         # self.get_logger().info('\nScript:\n"""' + script_str + '"""\n')
         script.setScript(script_str)
 
-        # Left_cam_node and right_cam_node are depthai camera nodes
-
-        for node, meta in zip(
-            (left_cam_node, right_cam_node),
-            [self.stream_metas[cam_id] for cam_id in (CAM_IDS.LUX_LEFT, CAM_IDS.LUX_RIGHT)],
-            strict=True,
-        ):
-            # Camera frame reader -> script [script_input_name]
-            node.setPreviewSize(FRAME_WIDTH, FRAME_HEIGHT)
-            node.setInterleaved(False)
-            node.setColorOrder(depthai.ColorCameraProperties.ColorOrder.RGB)
-
-            # attach camera node to the script input for that camera
-            node.preview.link(script.inputs[meta.script_topics.script_input_name])
-
-        stereo_node = pipeline.create(depthai.node.StereoDepth)
-        stereo_node.setDefaultProfilePreset(depthai.node.StereoDepth.PresetMode.HIGH_DENSITY)
-
-        # Ued to connect the toggle_queues (created a few blocks below) to the script with specific settings
-        for names in self.script_topics:
-            # Camera toggler -> script [script_toggle_name]
-            toggle_xin = pipeline.create(depthai.node.XLinkIn)
-            toggle_xin.setStreamName(names.toggle_in_stream_name)
-            toggle_xin.setMaxDataSize(1)
-            toggle_xin.out.link(script.inputs[names.script_toggle_name])
+        stereo_node = self.pipeline.create(depthai.node.StereoDepth)
+        # unsure what preset mode to use, try this for now
+        stereo_node.setDefaultProfilePreset(depthai.node.StereoDepth.PresetMode.HIGH_DETAIL)
 
         # Think telling the script that the left_cam_node is a frame input for the specific topic
-        left_cam_node.isp.link(script.inputs[self.left_stereo_script_topics.script_input_name])
-        right_cam_node.isp.link(script.inputs[self.right_stereo_script_topics.script_input_name])
+        left_cam_node.requestFullResolutionOutput().link(script.inputs[self.left_stereo_script_topics.script_input_name])
+        right_cam_node.requestFullResolutionOutput().link(script.inputs[self.right_stereo_script_topics.script_input_name])
 
         # Connecting some script outputs to the stereo node
         script.outputs[self.left_stereo_script_topics.script_output_name].link(stereo_node.left)
@@ -382,21 +379,13 @@ while True:
             script.inputs[self.stream_metas[CAM_IDS.LUX_DEPTH].script_topics.script_input_name]
         )
 
-        # Link script outputs to stream_meta outputs
-        for stream_meta in self.stream_metas.values():
-            # script [script_output_name] -> cam_xout
-            frame_xout = pipeline.create(depthai.node.XLinkOut)
-            frame_xout.setStreamName(stream_meta.out_stream_name)
-            frame_xout.input.setBlocking(False)
-            frame_xout.input.setQueueSize(1)
-            script.outputs[stream_meta.script_topics.script_output_name].link(frame_xout.input)
-
         self.get_logger().info('Deploying pipeline...')
 
         # Deploy pipeline to device
         while True:
             try:
-                self.device = depthai.Device(pipeline).__enter__()
+                self.pipeline.start()
+                self.pipeline.__enter__()
             except RuntimeError as e:  # noqa: F841 (unused variable e for optional logging below)
                 self.get_logger().warning(
                     'Error uploading to Luxonis cam, retrying '
@@ -409,20 +398,11 @@ while True:
             break
 
         # the queues to input the toggle values into the device
+
+        #THIS IS IT WERE ABOUT TO FINISH GET EXCITED WAHOOOOOO
         self.left_stereo_toggle_queue = self.device.getInputQueue('left_stereo_toggle_in')
-        self.right_stereo_toggle_queue = self.device.getInputQueue('right_stereo_toggle_in')
+        self.right_stereo_toggle_queue = stereo_node.Input.getInputQueue('right_stereo_toggle_in')
 
-        # the queues to input the toggles for all of the stream metas
-        self.toggle_queues = {
-            cam_id: self.device.getInputQueue(meta.script_topics.toggle_in_stream_name)
-            for cam_id, meta in self.stream_metas.items()
-        }
-
-        # the output queues for the stream metas
-        self.frame_output_queues = {
-            cam_id: self.device.getOutputQueue(meta.out_stream_name)
-            for cam_id, meta in self.stream_metas.items()
-        }
 
         self.get_logger().info('Pipeline deployed')
 
