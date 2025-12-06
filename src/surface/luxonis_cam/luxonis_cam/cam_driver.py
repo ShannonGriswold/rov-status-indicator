@@ -8,6 +8,7 @@ from builtin_interfaces.msg import Time
 from cv_bridge import CvBridge
 from numpy import generic
 from numpy.typing import NDArray
+import numpy as np
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.publisher import Publisher
@@ -139,7 +140,7 @@ class FramePublishers:
         return self.node.create_publisher(Image, topic.value, QoSPresetProfiles.DEFAULT.value)
 
     # queue is a DataOutputQueue, it is what helps get frames and other data from the device to the host application
-    def try_get_publish(self, topic: StreamTopic, queue: depthai.DataOutputQueue) -> None:
+    def try_get_publish(self, topic: StreamTopic, queue: depthai.MessageQueue) -> None:
         """
         Attempt to get a frame from the queue and publish it on the topic.
 
@@ -246,7 +247,7 @@ class LuxonisCamDriverNode(Node):
         # sets up the input and output queues from the camera
         self.deploy_pipeline()
 
-        calib_data = self.device.readCalibration()
+        calib_data = self.pipeline.getCalibrationData()
         focal_lengths_mm = [0.0, 0.0]
         self.intrinsics: list[list[list[float]]] = []
         try:
@@ -323,6 +324,8 @@ class LuxonisCamDriverNode(Node):
             input_queue= script.inputs[meta.script_topics.toggle_in_stream_name].createInputQueue(maxSize=1)
             self.toggle_queues[cam_id] = input_queue
 
+
+
         # Link script outputs to stream_meta outputs
         self.frame_output_queues = {}
         for cam_id, stream_meta in self.stream_metas.items():
@@ -378,6 +381,8 @@ while True:
         stereo_node.depth.link(
             script.inputs[self.stream_metas[CAM_IDS.LUX_DEPTH].script_topics.script_input_name]
         )
+        self.left_stereo_toggle_queue = script.inputs['left_stereo_toggle_in'].createInputQueue()
+        self.right_stereo_toggle_queue = script.inputs['right_stereo_toggle_in'].createInputQueue()
 
         self.get_logger().info('Deploying pipeline...')
 
@@ -396,13 +401,6 @@ while True:
                 self.get_logger().warning(str(e))
                 continue
             break
-
-        # the queues to input the toggle values into the device
-
-        #THIS IS IT WERE ABOUT TO FINISH GET EXCITED WAHOOOOOO
-        self.left_stereo_toggle_queue = self.device.getInputQueue('left_stereo_toggle_in')
-        self.right_stereo_toggle_queue = stereo_node.Input.getInputQueue('right_stereo_toggle_in')
-
 
         self.get_logger().info('Pipeline deployed')
 
@@ -439,7 +437,7 @@ while True:
 
             # buffer is just a message thingy
             buf = depthai.Buffer()  # TODO: can we create this once and reuse?
-            buf.setData([1 if enable_stereo else 0])
+            buf.setData(np.array([1 if enable_stereo else 0], dtype=np.uint8))
             # we send whether the stereo is enabled using the buffer that we created and it toggles the stereo
             self.left_stereo_toggle_queue.send(buf)
             self.right_stereo_toggle_queue.send(buf)
@@ -447,7 +445,7 @@ while True:
             # use the toggle queues to send whether each stream meta should be enabled
             for cam_id, toggle_queue in self.toggle_queues.items():
                 buf = depthai.Buffer()
-                buf.setData([1 if self.stream_metas[cam_id].enabled else 0])
+                buf.setData(np.array([1 if self.stream_metas[cam_id].enabled else 0], dtype=np.uint8))
                 toggle_queue.send(buf)
 
             self.missed_sends = 0
@@ -480,8 +478,8 @@ while True:
 
     def shutdown(self) -> None:
         """Free the device and any other resources."""
-        if self.device:
-            self.device.close()
+        if self.pipeline:
+            self.pipeline.__exit__(None, None, None)
 
 
 def main() -> None:
