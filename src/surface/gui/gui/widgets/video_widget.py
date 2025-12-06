@@ -46,7 +46,6 @@ class CameraType(IntEnum):
     DEPTH = 3
     SIMULATION = 4
     QPIXMAP = 5
-    PHOTOSPHERE = 6
 
 
 @dataclass
@@ -164,9 +163,6 @@ class VideoWidget(QWidget):
         if self.camera_description.type == CameraType.ETHERNET:
             # Switches ethernet's color profile from BayerBGR to BGR
             cv_img = cv2.cvtColor(cv_img.astype(int), cv2.COLOR_BAYER_BGGR2BGR)
-
-        if self.camera_description.type == CameraType.PHOTOSPHERE:
-            cv_img = cv2.cvtColor(cv_img.astype(int), cv2.COLOR_BGR2RGB)
 
         # Color image
         if len(cv_img.shape) == COLOR:
