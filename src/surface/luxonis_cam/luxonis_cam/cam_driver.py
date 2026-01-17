@@ -153,6 +153,11 @@ class FramePublishers:
         """
         video_frame = queue.tryGet()
 
+        if topic is None:
+            print("topic is none") 
+
+        
+
         # Discard None (failed to get frame)
         if video_frame is None:
             ###########################
@@ -329,12 +334,16 @@ class LuxonisCamDriverNode(Node):
         # Link script outputs to stream_meta outputs
         self.frame_output_queues = {}
         for cam_id, stream_meta in self.stream_metas.items():
+            #output queue does not have any items in it
+            # WHY???
             output_queue= script.outputs[stream_meta.script_topics.script_output_name].createOutputQueue(maxSize=1, blocking=False)
             self.frame_output_queues[cam_id]=output_queue
 
         # top part creates a list of which script topics are enabled, where to get the toggle values, where to get the frames from if enabled, and where to output the frames to
         # Loops through each script topic and if there is data for the toggle it uses that to set enabled
         # If there is data in the frame input and that topic is enabled then it outputs the frame
+
+        ##TODO run test again and make sure it works, plug in depthai code, print some things 1/17/26
         script_str = f"""
 enabled_flags = [False] * {len(self.script_topics)}
 toggle_inputs = ["{'", "'.join([names.script_toggle_name for names in self.script_topics])}"]
