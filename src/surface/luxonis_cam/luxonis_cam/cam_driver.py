@@ -3,12 +3,12 @@ from enum import StrEnum
 
 import cv2
 import depthai
+import numpy as np
 import rclpy
 from builtin_interfaces.msg import Time
 from cv_bridge import CvBridge
 from numpy import generic
 from numpy.typing import NDArray
-import numpy as np
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.publisher import Publisher
@@ -20,7 +20,7 @@ from rov_msgs.srv import CameraManage
 
 Matlike = NDArray[generic]
 
-# Hold the calibration and maybe something else
+# Stores the calibration
 LEFT_CAM_SOCKET = depthai.CameraBoardSocket.CAM_A
 RIGHT_CAM_SOCKET = depthai.CameraBoardSocket.CAM_D
 
@@ -40,12 +40,10 @@ class StreamTopic(StrEnum):
     DEPTH = 'depth/image_raw'
 
 
-# goes into the script, otherwise unknown
 @dataclass
 class StreamScriptTopicSet:
     """Dataclass representing video stream script topics (toggle/frame I/O stream topics)."""
 
-    toggle_in_stream_name: str
     script_toggle_name: str
     script_input_name: str
     script_output_name: str
@@ -66,22 +64,21 @@ class StreamScriptTopicSet:
             a dataclass representing stream script topics
         """
         return StreamScriptTopicSet(
-            toggle_in_stream_name=f'{stream_name}_toggle_in',
             script_toggle_name=f'{stream_name}_toggle',
             script_input_name=f'{stream_name}_script_in',
             script_output_name=f'{stream_name}_script_out',
         )
 
-# Holds the ROS topic, StreamSciptTopicSet, output stream name and whether the stream is enabled by default
 @dataclass
 class StreamMeta:
     """Mutable dataclass representing video stream metadata.
-    
-    Holds the ROS topic, StreamScriptTopicSet, output stream name and whether the stream is enabled by default"""
+
+    Holds the ROS topic, StreamScriptTopicSet, output stream name and whether the stream is enabled
+    by default
+    """
 
     topic: StreamTopic
     script_topics: StreamScriptTopicSet
-    out_stream_name: str
     enabled: bool
 
 
@@ -107,7 +104,6 @@ class StreamMeta:
         return StreamMeta(
             topic=topic,
             script_topics=StreamScriptTopicSet.of(stream_name),
-            out_stream_name=f'{stream_name}_out',
             enabled=enabled,
         )
 
@@ -140,7 +136,6 @@ class FramePublishers:
         """
         return self.node.create_publisher(Image, topic.value, QoSPresetProfiles.DEFAULT.value)
 
-    # queue is a DataOutputQueue, it is what helps get frames and other data from the device to the host application
     def try_get_publish(self, topic: StreamTopic, queue: depthai.MessageQueue) -> None:
         """
         Attempt to get a frame from the queue and publish it on the topic.
@@ -174,7 +169,6 @@ class FramePublishers:
                     f'Invalid camera publisher topic "{topic.value}", not publishing'
                 )
 
-    # Changes the image into an image message to be able to send it
     def get_image_msg(self, image: Matlike, time: Time) -> Image:
         """Convert cv2 image to ROS2 Image with CvBridge.
 
@@ -204,7 +198,6 @@ STREAMS_THAT_NEED_STEREO = [
     CAM_IDS.LUX_DEPTH,
 ]
 
-# ROS Node not depthai Node
 class LuxonisCamDriverNode(Node):
     def __init__(self) -> None:
         super().__init__('luxonis_cam_driver', parameter_overrides=[])
@@ -296,8 +289,10 @@ class LuxonisCamDriverNode(Node):
         """Create a depthai pipeline and deploy it to the camera."""
         self.pipeline = depthai.Pipeline()
 
-        left_cam_node = self.pipeline.create(depthai.node.Camera).build(LEFT_CAM_SOCKET, sensorResolution=(1280,800))
-        right_cam_node = self.pipeline.create(depthai.node.Camera).build(RIGHT_CAM_SOCKET, sensorResolution=(1280,800))
+        left_cam_node = self.pipeline.create(depthai.node.Camera).build(LEFT_CAM_SOCKET,
+                                                                        sensorResolution=(1280,800))
+        right_cam_node = self.pipeline.create(depthai.node.Camera).build(RIGHT_CAM_SOCKET,
+                                                                         sensorResolution=(1280,800))
 
         right_cam_node.initialControl.setMisc('3a-follow', depthai.CameraBoardSocket.CAM_D.value)
 
@@ -310,27 +305,31 @@ class LuxonisCamDriverNode(Node):
             strict=True,
         ):
             input_name = meta.script_topics.script_input_name
-            node.requestOutput((FRAME_WIDTH, FRAME_HEIGHT), type = depthai.ImgFrame.Type.RGB888p).link(script.inputs[input_name])
+            node.requestOutput((FRAME_WIDTH, FRAME_HEIGHT),
+                               type = depthai.ImgFrame.Type.RGB888p).link(script.inputs[input_name])
             script.inputs[input_name].setBlocking(False)
             script.inputs[input_name].setMaxSize(1)
 
         # create toggle input queues
         self.toggle_queues = {}
         for cam_id, meta in self.stream_metas.items():
-            input_queue= script.inputs[meta.script_topics.script_toggle_name].createInputQueue(maxSize=1)
+            toggle_name = meta.script_topics.script_toggle_name
+            input_queue= script.inputs[toggle_name].createInputQueue(maxSize=1)
             self.toggle_queues[cam_id] = input_queue
 
-        self.left_stereo_toggle_queue = script.inputs["left_stereo_toggle"].createInputQueue(maxSize=1)
-        self.right_stereo_toggle_queue = script.inputs["right_stereo_toggle"].createInputQueue(maxSize=1)
-        
+        self.left_stereo_toggle_queue = script.inputs['left_stereo_toggle'].createInputQueue(maxSize=1)
+        self.right_stereo_toggle_queue = script.inputs['right_stereo_toggle'].createInputQueue(maxSize=1)
+
         # Link script outputs to stream_meta outputs
         self.frame_output_queues = {}
         for cam_id, stream_meta in self.stream_metas.items():
-            output_queue= script.outputs[stream_meta.script_topics.script_output_name].createOutputQueue(maxSize=1, blocking=False)
+            output_name = stream_meta.script_topics.script_output_name
+            output_queue= script.outputs[output_name].createOutputQueue(maxSize=1, blocking=False)
             self.frame_output_queues[cam_id]=output_queue
 
-        # top part creates a list of which script topics are enabled, where to get the toggle values, where to get the frames from if enabled, and where to output the frames to
-        # Loops through each script topic and if there is data for the toggle it uses that to set enabled
+        # Creates lists of which script topics are enabled, where to get the toggle
+        # values, where to get the frames from if enabled, and where to output the frames to
+        # Loops through script topics and if there is data for the toggle it uses that for enabled
         # If there is data in the frame input and that topic is enabled then it outputs the frame
         script_str = f"""
 enabled_flags = [False] * {len(self.script_topics)}
@@ -357,15 +356,14 @@ while True:
         # unsure what preset mode to use, try this for now
         stereo_node.setDefaultProfilePreset(depthai.node.StereoDepth.PresetMode.HIGH_DETAIL)
 
-        # Think telling the script that the left_cam_node is a frame input for the specific topic
+        # Connects the left_cam_node and right_cam_node to be inputs to the script
         left_cam_node.requestFullResolutionOutput().link(script.inputs[self.left_stereo_script_topics.script_input_name])
         right_cam_node.requestFullResolutionOutput().link(script.inputs[self.right_stereo_script_topics.script_input_name])
 
-        # Connecting some script outputs to the stereo node
+        # Connecting script outputs to the stereo node
         script.outputs[self.left_stereo_script_topics.script_output_name].link(stereo_node.left)
         script.outputs[self.right_stereo_script_topics.script_output_name].link(stereo_node.right)
 
-        # Link a bunch of things to the stereo_node
         stereo_node.rectifiedLeft.link(
             script.inputs[self.stream_metas[CAM_IDS.LUX_LEFT_RECT].script_topics.script_input_name]
         )
@@ -395,7 +393,7 @@ while True:
                 )
                 # Uncomment to get more details about errors
                 # These are usually just "the cam is disconnected", but can be other things
-                self.get_logger().warning(str(e))
+                # self.get_logger().warning(str(e))
                 continue
             break
 
@@ -434,14 +432,15 @@ while True:
 
             buf = depthai.Buffer()  # TODO: can we create this once and reuse?
             buf.setData(np.array([1 if enable_stereo else 0], dtype=np.uint8))
-            # we send whether the stereo is enabled using the buffer that we created and it toggles the stereo
+            # Send whether the stereo is enabled using the buffer and it toggles the stereo
             self.left_stereo_toggle_queue.send(buf)
             self.right_stereo_toggle_queue.send(buf)
 
-            # use the toggle queues to send whether each stream meta should be enabled
+            # Use the toggle queues to send whether each stream meta should be enabled
             for cam_id, toggle_queue in self.toggle_queues.items():
                 buf = depthai.Buffer()
-                buf.setData(np.array([1 if self.stream_metas[cam_id].enabled else 0], dtype=np.uint8))
+                buf.setData(np.array([1 if self.stream_metas[cam_id].enabled else 0],
+                                     dtype=np.uint8))
                 toggle_queue.send(buf)
 
             self.missed_sends = 0
