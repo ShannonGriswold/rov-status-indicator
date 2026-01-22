@@ -84,6 +84,7 @@ class StreamMeta:
     out_stream_name: str
     enabled: bool
 
+
     @staticmethod
     def of(stream_name: str, topic: StreamTopic, *, enabled: bool) -> 'StreamMeta':
         """
@@ -153,15 +154,8 @@ class FramePublishers:
         """
         video_frame = queue.tryGet()
 
-        if topic is None:
-            print("topic is none") 
-
-        
-
         # Discard None (failed to get frame)
         if video_frame is None:
-            ###########################
-            print("video_frame was None")
             return
 
         # Type narrow to make mypy happy
@@ -172,10 +166,8 @@ class FramePublishers:
         time_msg = self.node.get_clock().now().to_msg()
 
         if video_frame is not None:
-            print("video_frame is not None")
             img_msg = self.get_image_msg(video_frame.getCvFrame(), time_msg)
             if topic in self.publishers:
-                print(f'published on {topic.value}')
                 self.publishers[topic].publish(img_msg)
             else:
                 self.node.get_logger().warning(
@@ -326,11 +318,12 @@ class LuxonisCamDriverNode(Node):
         # create toggle input queues
         self.toggle_queues = {}
         for cam_id, meta in self.stream_metas.items():
-            input_queue= script.inputs[meta.script_topics.toggle_in_stream_name].createInputQueue(maxSize=1)
+            input_queue= script.inputs[meta.script_topics.script_toggle_name].createInputQueue(maxSize=1)
             self.toggle_queues[cam_id] = input_queue
 
-
-
+        self.left_stereo_toggle_queue = script.inputs["left_stereo_toggle"].createInputQueue(maxSize=1)
+        self.right_stereo_toggle_queue = script.inputs["right_stereo_toggle"].createInputQueue(maxSize=1)
+        
         # Link script outputs to stream_meta outputs
         self.frame_output_queues = {}
         for cam_id, stream_meta in self.stream_metas.items():
@@ -339,11 +332,12 @@ class LuxonisCamDriverNode(Node):
             output_queue= script.outputs[stream_meta.script_topics.script_output_name].createOutputQueue(maxSize=1, blocking=False)
             self.frame_output_queues[cam_id]=output_queue
 
+
         # top part creates a list of which script topics are enabled, where to get the toggle values, where to get the frames from if enabled, and where to output the frames to
         # Loops through each script topic and if there is data for the toggle it uses that to set enabled
         # If there is data in the frame input and that topic is enabled then it outputs the frame
 
-        ##TODO run test again and make sure it works, plug in depthai code, print some things 1/17/26
+        
         script_str = f"""
 enabled_flags = [False] * {len(self.script_topics)}
 toggle_inputs = ["{'", "'.join([names.script_toggle_name for names in self.script_topics])}"]
@@ -462,8 +456,6 @@ while True:
             self.missed_sends += 1
             self.get_logger().warn('Missed a dual cam spin')
             self.get_logger().warn(e)
-            print("Runtime error when spinning")
-            print(e)
 
         if self.missed_sends >= MISSED_SENDS_RESET_THRESHOLD:
             self.get_logger().error(
