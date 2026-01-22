@@ -240,7 +240,6 @@ class LuxonisCamDriverNode(Node):
             ),
         )
 
-        # Our method not depthai
         # sets up the input and output queues from the camera
         self.deploy_pipeline()
 
@@ -327,17 +326,12 @@ class LuxonisCamDriverNode(Node):
         # Link script outputs to stream_meta outputs
         self.frame_output_queues = {}
         for cam_id, stream_meta in self.stream_metas.items():
-            #output queue does not have any items in it
-            # WHY???
             output_queue= script.outputs[stream_meta.script_topics.script_output_name].createOutputQueue(maxSize=1, blocking=False)
             self.frame_output_queues[cam_id]=output_queue
-
 
         # top part creates a list of which script topics are enabled, where to get the toggle values, where to get the frames from if enabled, and where to output the frames to
         # Loops through each script topic and if there is data for the toggle it uses that to set enabled
         # If there is data in the frame input and that topic is enabled then it outputs the frame
-
-        
         script_str = f"""
 enabled_flags = [False] * {len(self.script_topics)}
 toggle_inputs = ["{'", "'.join([names.script_toggle_name for names in self.script_topics])}"]
@@ -438,7 +432,6 @@ while True:
                     enable_stereo = True
                     break
 
-            # buffer is just a message thingy
             buf = depthai.Buffer()  # TODO: can we create this once and reuse?
             buf.setData(np.array([1 if enable_stereo else 0], dtype=np.uint8))
             # we send whether the stereo is enabled using the buffer that we created and it toggles the stereo
