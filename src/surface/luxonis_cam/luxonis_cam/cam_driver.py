@@ -146,7 +146,7 @@ class FramePublishers:
         ----------
         topic : StreamTopic
             topic to publish to
-        queue : depthai.DataOutputQueue
+        queue : depthai.MessageQueue
             queue to read from (single read then give up, won't block long)
         """
         video_frame = queue.tryGet()
