@@ -27,7 +27,7 @@ setup(
         # Include all style files.
         (
             str(Path('share') / PACKAGE_NAME / 'styles'),
-            [str(path) for path in (Path('gui') / 'styles').glob('*.qss')],
+            [str(path) for path in (Path('gui') / 'styles').glob('*.xml')],
         ),
         # Include all images.
         (
