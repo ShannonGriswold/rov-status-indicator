@@ -5,7 +5,7 @@ from rclpy.node import Node
 from rov_msgs.msg import Flooding
 
 # Pins used for GPIO
-DETECT_PIN = 27
+DETECT_PIN = 17
 
 
 class FloodDetector(Node):
