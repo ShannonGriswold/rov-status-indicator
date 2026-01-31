@@ -30,7 +30,7 @@ class GUINode(Node):
 
     __instance: 'GUINode | None' = None
 
-    def __new__(cls, _: str | None = None) -> 'GUINode': # noqa: PYI034
+    def __new__(cls, _: str | None = None) -> 'GUINode':  # noqa: PYI034
         if cls.__instance is None:
             cls.__instance = super().__new__(cls)
         return cls.__instance
