@@ -15,10 +15,16 @@ class IndicatorMixin(QWidget):
     # The stylesheets that correspond to each widget state
     _STYLESHEETS: Final[dict[WidgetState, str]] = {
         # Stylesheet for when a component is running, enabled, or armed
-        WidgetState.ON: 'QWidget { background-color: limegreen; }',
+        WidgetState.ON: """
+        QWidget { background-color: limegreen; }
+        QWidget:hover { background-color: #5bd75b; }
+        """,
         # Stylesheet for when a component is disabled, not running, or disarmed, but could be
         # enabled through this widget
-        WidgetState.OFF: 'QWidget { background-color: red; }',
+        WidgetState.OFF: """
+        QWidget { background-color: red; }
+        QWidget:hover { background-color: #ff3333; }
+        """,
         # Stylesheet for when a component is disabled, not expected to have any effect or perform
         # its function because of some external factor, either another widget or something
         # external to the gui. For example, a the arm button when the pi is not connected
@@ -48,6 +54,13 @@ class IndicatorMixin(QWidget):
             The new state for the widget
         """
         self.current_state = new_state
+        match self.current_state:
+            case WidgetState.OFF:
+                self.setProperty('class', 'danger')
+            case WidgetState.ON:
+                self.setProperty('class', 'success')
+            case _:
+                self.setProperty('class', 'warning')
         self.setStyleSheet(self._original_stylesheet + self._STYLESHEETS[self.current_state])
 
 
