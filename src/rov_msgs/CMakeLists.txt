@@ -41,11 +41,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/FloatSingle.msg"
   "msg/Intrinsics.msg"
   "srv/AutonomousFlight.srv"
-  "srv/GeneratePhotosphere.srv"
   "srv/MissionTimerSet.srv"
   "srv/CameraManage.srv"
   "srv/VehicleArming.srv"
-  "srv/TakePhotosphere.srv"
   DEPENDENCIES std_msgs
 )
 
