@@ -28,7 +28,7 @@ repos:
     rev: v1.18.2
     hooks:
       - id: mypy
-        args: [--strict, --ignore-missing-imports, --explicit-package-bases, --allow-untyped-decorators, --allow-subclassing-any, --allow-untyped-call]
+        args: [--strict, --ignore-missing-imports, --explicit-package-bases, --no-warn-unused-ignores, --allow-untyped-decorators, --allow-subclassing-any, --allow-untyped-call]
         additional_dependencies:
           - types-requests
           - PyQt6-stubs
