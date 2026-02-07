@@ -7,14 +7,6 @@ This package is for all the code related go the driver station GUI. The GUI is c
 `app.py` is the a custom superclass which inherits from a PyQT QWidget.
 Then `operator_app.py` and `pilot_app.py` inherit from App to make our two custom GUIs.
 
-## Installation
-
-Install pypdf with
-
-```bash
-pip install pypdf --break-system-packages
-```
-
 ## Usage
 
 Run the operator GUI with
