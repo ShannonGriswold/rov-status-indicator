@@ -186,7 +186,7 @@ class FramePublishers:
         Image
             The ROS2 image message
         """
-        inverted_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        inverted_image = cv2.cvtColor(image.astype(int), cv2.COLOR_BGR2RGB)
         img_msg: Image = self.bridge.cv2_to_imgmsg(inverted_image)
         img_msg.encoding = 'rgb8'
         img_msg.header.stamp = time
