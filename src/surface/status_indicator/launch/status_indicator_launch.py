@@ -18,6 +18,13 @@ def generate_launch_description() -> LaunchDescription:
         output='screen',
     )
 
+    bridge = Node(
+        package='status_indicator',
+        executable='bridge',
+        emulate_tty=True,
+        output='screen',
+    )
+
     params_file_path = os.path.join(
         get_package_share_directory('status_indicator'),
         'config',
@@ -36,4 +43,4 @@ def generate_launch_description() -> LaunchDescription:
         ]
     )
 
-    return LaunchDescription([status_indicator, mqtt_client])
+    return LaunchDescription([status_indicator, mqtt_client, bridge])
