@@ -41,3 +41,5 @@ eeprom.bin
 
 # Mavproxy Files
 *.parm
+
+venv/

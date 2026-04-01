@@ -18,8 +18,8 @@ class StatusIndicatorNode(Node):
 
         self.subscriber = self.create_subscription(Bool, '/hello', self.arm_callback, qos_profile_system_default)
 
-        while True:
-            self.publish_messages()
+        # while True:
+        #     self.publish_messages()
 
     def arm_callback(self, message: Bool) -> None:
         print(f'Armed: {message.data}')
@@ -41,28 +41,28 @@ class StatusIndicatorNode(Node):
         state = VehicleState(pi_connected=False, ardusub_connected=False, armed=False)
         self.publisher.publish(state)
 
-        print('Pi Connected: 0, Ardusub Connected: 0 Armed: 0')
+        # print('Pi Connected: 0, Ardusub Connected: 0 Armed: 0')
 
         time.sleep(3)
 
         state = VehicleState(pi_connected=True, ardusub_connected=False, armed=False)
         self.publisher.publish(state)
 
-        print('Pi Connected: 1, Ardusub Connected: 0 Armed: 0')
+        # print('Pi Connected: 1, Ardusub Connected: 0 Armed: 0')
 
         time.sleep(3)
 
         state = VehicleState(pi_connected=False, ardusub_connected=True, armed=False)
         self.publisher.publish(state)
 
-        print('Pi Connected: 0, Ardusub Connected: 1 Armed: 0')
+        # print('Pi Connected: 0, Ardusub Connected: 1 Armed: 0')
 
         time.sleep(3)
 
         state = VehicleState(pi_connected=False, ardusub_connected=False, armed=True)
         self.publisher.publish(state)
 
-        print('Pi Connected: 0, Ardusub Connected: 0 Armed: 1')
+        # print('Pi Connected: 0, Ardusub Connected: 0 Armed: 1')
 
         time.sleep(3)
 
