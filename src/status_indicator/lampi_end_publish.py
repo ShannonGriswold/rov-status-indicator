@@ -1,7 +1,7 @@
 import time
 
 from paho.mqtt import publish
-#helloMqtt
+
 while True:
     payload = 'true'
     publish.single('rov/helloMqtt', payload, hostname='localhost')
