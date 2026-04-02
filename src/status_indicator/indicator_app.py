@@ -48,8 +48,19 @@ class IndicatorApp(App):
         new_state["pi_connected"] = bool(message.payload[4])
         new_state["ardusub_connected"] = bool(message.payload[5])
         new_state["armed"] = bool(message.payload[6])
-        print("recieved vehicle state")
         Clock.schedule_once(lambda dt: self._update_ui(new_state), 0.01)
+
+    def send_arm(self) -> None:
+        self.mqtt.publish(TOPIC_ARM, 'true', qos=1)
+
+    def send_disarm(self) -> None:
+        self.mqtt.publish(TOPIC_ARM, 'false', qos=1)
+
+    def _update_ui(self, new_state: dict[str, Any]) -> None:
+        if new_state['armed']:
+            self.arm_text = 'Armed'
+        else:
+            self.arm_text = 'Disarmed'
 
     def set_up_gpio_and_network_status_popup(self) -> None:
         """Set up a popup to display the Lampi's IP
@@ -60,15 +71,6 @@ class IndicatorApp(App):
         Clock.schedule_interval(self._poll_gpio, 0.05)
         self.network_status_popup: Popup = self._build_network_status_popup()
         self.network_status_popup.bind(on_open=self.update_popup_ip_address)
-
-    def _update_ui(self, new_state: dict[str, Any]) -> None:
-        print("updating ui")
-        if new_state['armed']:
-            print("armed")
-            self.arm_text = 'Armed'
-        else:
-            print("disarmed")
-            self.arm_text = 'Disarmed'
 
     def _build_network_status_popup(self) -> Popup:
         return Popup(title='Network Status',
