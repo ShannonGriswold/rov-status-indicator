@@ -98,7 +98,7 @@ class BridgeNode(Node):
                    properties: Optional[mqtt.Properties]) -> None:
         print(f'Connected with reason code: {reason_code}')
 
-        self.remote_client.subscribe('rov/helloMqtt', qos=1)
+        self.remote_client.subscribe('rov/arm', qos=1)
 
     def default_on_message(self, client: mqtt.Client, userdata: Any,
                            msg: mqtt.MQTTMessage) -> None:

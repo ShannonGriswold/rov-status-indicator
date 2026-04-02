@@ -18,8 +18,8 @@ class StatusIndicatorNode(Node):
 
         self.subscriber = self.create_subscription(Bool, '/hello', self.arm_callback, qos_profile_system_default)
 
-        while True:
-            self.publish_messages()
+        # while True:
+        #     self.publish_messages()
 
     def arm_callback(self, message: Bool) -> None:
         print(f'Armed: {message.data}')
