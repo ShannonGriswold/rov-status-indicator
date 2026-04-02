@@ -49,7 +49,7 @@ class BridgeNode(Node):
         )
         self.remote_client.enable_logger()
         self.remote_client.on_connect = self.remote_on_connect
-        self.remote_client.message_callback_add('rov/helloMqtt',
+        self.remote_client.message_callback_add('rov/arm',
                                     self.on_message_recieve_arm)
 
         

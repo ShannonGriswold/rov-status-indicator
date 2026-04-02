@@ -1,6 +1,18 @@
 #:kivy 1.9
 
+#:include colors.kv
+
 BoxLayout:
   orientation: 'vertical'
   Label:
-    text: 'Hello from Kivy'
+    text: app.arm_text
+  BoxLayout:
+    orientation: 'horizontal'
+    Button:
+      text: "Arm"
+      on_press: app.send_arm()
+      background_color: green
+    Button:
+      text: "Disarm"
+      on_press: app.send_disarm()
+      background_color: red

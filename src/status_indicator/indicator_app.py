@@ -3,18 +3,64 @@ from kivy.app import App
 from kivy.clock import Clock
 import pigpio
 from typing import Any, Optional
-from kivy.properties import NumericProperty, AliasProperty, BooleanProperty
+from kivy.properties import NumericProperty, AliasProperty, BooleanProperty, StringProperty
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
+import paho.mqtt.client as mqtt
+from paho.mqtt.client import Client, CallbackAPIVersion
+from lamp_common import *
 
 import lampi_util
+
+MQTT_CLIENT_ID = "lampi_ui"
 
 class IndicatorApp(App):
 
     gpio17_pressed = BooleanProperty(False)
+    arm_text = StringProperty("Disarmed")
+    armed = BooleanProperty(False)
+    pi_connected = BooleanProperty(False)
+    ardusub_connected = BooleanProperty(False)
 
     def on_start(self) -> None:
+        self.mqtt: Client = Client(
+            callback_api_version=CallbackAPIVersion.VERSION2,
+            client_id=MQTT_CLIENT_ID
+        )
+        self.mqtt.enable_logger()
+        self.mqtt.on_connect = self.on_connect
+
+        self.mqtt.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT,
+                          keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
+        self.mqtt.loop_start()
         self.set_up_gpio_and_network_status_popup()
+
+    def on_connect(self, client: Client, userdata: Any,
+                   flags: mqtt.ConnectFlags, reason_code: mqtt.ReasonCode,
+                   properties: Optional[mqtt.Properties]) -> None:
+        self.mqtt.message_callback_add(TOPIC_VEHICLE_STATE,
+                                       self.receive_vehicle_state)
+        self.mqtt.subscribe(TOPIC_VEHICLE_STATE, qos=1)
+
+    def receive_vehicle_state(self, client: Client, userdata: Any,
+                              message: mqtt.MQTTMessage) -> None:
+        new_state = {}
+        new_state["pi_connected"] = bool(message.payload[4])
+        new_state["ardusub_connected"] = bool(message.payload[5])
+        new_state["armed"] = bool(message.payload[6])
+        Clock.schedule_once(lambda dt: self._update_ui(new_state), 0.01)
+
+    def send_arm(self) -> None:
+        self.mqtt.publish(TOPIC_ARM, 'true', qos=1)
+
+    def send_disarm(self) -> None:
+        self.mqtt.publish(TOPIC_ARM, 'false', qos=1)
+
+    def _update_ui(self, new_state: dict[str, Any]) -> None:
+        if new_state['armed']:
+            self.arm_text = 'Armed'
+        else:
+            self.arm_text = 'Disarmed'
 
     def set_up_gpio_and_network_status_popup(self) -> None:
         """Set up a popup to display the Lampi's IP
