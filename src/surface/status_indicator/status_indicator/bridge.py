@@ -18,7 +18,7 @@ LOCAL_MQTT_BROKER_PORT: int = 1883
 LOCAL_MQTT_BROKER_HOST: str = "localhost"
 
 REMOTE_MQTT_CLIENT_ID = 'status_indicator'
-REMOTE_MQTT_BROKER_HOST = '172.20.84.239'
+REMOTE_MQTT_BROKER_HOST = '172.20.188.247'
 REMOTE_MQTT_BROKER_PORT: int = 1883
 
 MQTT_VERSION: mqtt.MQTTProtocolVersion = mqtt.MQTTv311
@@ -107,7 +107,7 @@ class BridgeNode(Node):
 
     def on_message_publish_state(self, client: mqtt.Client, userdata: Any,
                               msg: mqtt.MQTTMessage) -> None:
-        self.remote_client.publish('rov/hiMqtt', msg.payload, qos=1)
+        self.remote_client.publish('rov/vehicleState', msg.payload, qos=1)
 
     def on_message_recieve_arm(self, client: mqtt.Client, userdata: Any, 
                                msg: mqtt.MQTTMessage) -> None:
