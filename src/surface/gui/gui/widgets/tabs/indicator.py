@@ -5,6 +5,8 @@ from gui.widgets.arm import Arm
 from gui.widgets.heartbeat import HeartbeatWidget
 from gui.widgets.ip_widget import IPWidget
 from gui.widgets.logger import Logger
+from rov_msgs.msg import vehicle_state
+from rclpy.qos import qos_profile_system_default
 
 
 
@@ -12,6 +14,7 @@ from gui.widgets.logger import Logger
 class IndicatorTab(QWidget):
     def __init__(self) -> None:
         super().__init__()
+        self.publisher = self.create_publisher(vehicle_state, "/hi", qos_profile_system_default)
         top_bar = QHBoxLayout()
         button1 = QPushButton()
         button1.setText("ARM")
@@ -33,12 +36,12 @@ class IndicatorTab(QWidget):
 
     def publish_arm(self):
         payload = 'true'
-        publish.single('/hi', payload, hostname='localhost')
         print(payload)
+        self.publisher.publish(payload)
     
 
     def publish_disarm(self):
         payload = 'false'
-        publish.single('/hi', payload, hostname='localhost')
         print(payload)
+        self.publisher.publish(payload)
     
