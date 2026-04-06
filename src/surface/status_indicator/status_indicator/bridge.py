@@ -13,9 +13,13 @@ import time
 import paho.mqtt.client as mqtt
 #import paho
 
-LOCAL_MQTT_CLIENT_ID = 'ros_node'
-LOCAL_MQTT_BROKER_PORT: int = 1883
-LOCAL_MQTT_BROKER_HOST: str = "localhost"
+ROS_TOPIC_VEHICLE_STATE = "hi"
+ROS_TOPIC_FLOODING = "flooding"
+ROS_TOPIC_ARM = "hello"
+
+MQTT_TOPIC_VEHICLE_STATE = "rov/vehicleState"
+MQTT_TOPIC_ARM = "rov/arm"
+MQTT_TOPIC_FLOODING = "rov/flooding"
 
 REMOTE_MQTT_CLIENT_ID = 'status_indicator'
 REMOTE_MQTT_BROKER_HOST = '172.20.188.247'
@@ -30,17 +34,6 @@ class BridgeNode(Node):
         super().__init__('bridge', parameter_overrides=[])
 
         logging.basicConfig(level=logging.DEBUG)
-
-        self.local_client = mqtt.Client(
-            callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-            client_id=LOCAL_MQTT_CLIENT_ID,
-            protocol=MQTT_VERSION
-        )
-        self.local_client.enable_logger()
-        self.local_client.on_connect = self.local_on_connect
-        self.local_client.message_callback_add('hiMqtt',
-                                    self.on_message_publish_state)
-        self.local_client.on_message = self.default_on_message
 
         self.remote_client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
@@ -61,10 +54,6 @@ class BridgeNode(Node):
         start_time = time.time()
         while True:
             try:
-                self.local_client.connect(LOCAL_MQTT_BROKER_HOST,
-                                     port=LOCAL_MQTT_BROKER_PORT,
-                                     keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
-                print("Connected to local broker")
                 self.remote_client.connect(REMOTE_MQTT_BROKER_HOST,
                                      port=REMOTE_MQTT_BROKER_PORT,
                                      keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
@@ -80,18 +69,9 @@ class BridgeNode(Node):
                 else:
                     raise e
         try:
-            self.local_client.loop_start()
             self.remote_client.loop_forever()
         finally:
             print('errored')
-
-
-    def local_on_connect(self, client: mqtt.Client, userdata: Any,
-                   flags: mqtt.ConnectFlags, reason_code: mqtt.ReasonCode,
-                   properties: Optional[mqtt.Properties]) -> None:
-        print(f'Connected with reason code: {reason_code}')
-
-        self.local_client.subscribe('hiMqtt', qos=1)
 
     def remote_on_connect(self, client: mqtt.Client, userdata: Any,
                    flags: mqtt.ConnectFlags, reason_code: mqtt.ReasonCode,
