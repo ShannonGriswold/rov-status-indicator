@@ -7,6 +7,7 @@ from gui.widgets.ip_widget import IPWidget
 from gui.widgets.logger import Logger
 from rov_msgs.msg import VehicleState
 from rclpy.qos import qos_profile_system_default
+from gui.gui_node import GUINode
 
 
 
@@ -14,7 +15,7 @@ from rclpy.qos import qos_profile_system_default
 class IndicatorTab(QWidget):
     def __init__(self) -> None:
         super().__init__()
-        self.publisher = self.create_publisher(VehicleState, "/hi", qos_profile_system_default)
+        self.publisher = GUINode().create_publisher(VehicleState, "/hi", qos_profile_system_default)
         top_bar = QHBoxLayout()
         button1 = QPushButton()
         button1.setText("ARM")
