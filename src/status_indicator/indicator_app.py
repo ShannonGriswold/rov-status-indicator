@@ -1,3 +1,4 @@
+import json
 from kivy.app import App
 
 from kivy.clock import Clock
@@ -44,17 +45,25 @@ class IndicatorApp(App):
 
     def receive_vehicle_state(self, client: Client, userdata: Any,
                               message: mqtt.MQTTMessage) -> None:
-        new_state = {}
-        new_state["pi_connected"] = bool(message.payload[4])
-        new_state["ardusub_connected"] = bool(message.payload[5])
-        new_state["armed"] = bool(message.payload[6])
-        Clock.schedule_once(lambda dt: self._update_ui(new_state), 0.01)
+        try:
+            new_state = json.loads(message.payload.decode('utf-8'))
+            Clock.schedule_once(lambda dt: self._update_ui(new_state), 0.01)
+        except Exception:
+            print('Invalid vehicle state')
 
     def send_arm(self) -> None:
-        self.mqtt.publish(TOPIC_ARM, 'true', qos=1)
+        state = {
+            'armed': True
+        }
+        message = json.dumps(state).encode('utf-8')
+        self.mqtt.publish(TOPIC_ARM, message, qos=1)
 
     def send_disarm(self) -> None:
-        self.mqtt.publish(TOPIC_ARM, 'false', qos=1)
+        state = {
+            'armed': False
+        }
+        message = json.dumps(state).encode('utf-8')
+        self.mqtt.publish(TOPIC_ARM, message, qos=1)
 
     def _update_ui(self, new_state: dict[str, Any]) -> None:
         if new_state['armed']:

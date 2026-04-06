@@ -25,22 +25,4 @@ def generate_launch_description() -> LaunchDescription:
         output='screen',
     )
 
-    params_file_path = os.path.join(
-        get_package_share_directory('status_indicator'),
-        'config',
-        'params.yaml'
-    )
-
-    print(params_file_path)
-
-    mqtt_client = Node(
-        package='mqtt_client',
-        executable='mqtt_client',
-        name='mqtt_client',
-        output='screen',
-        parameters=[
-            params_file_path
-        ]
-    )
-
-    return LaunchDescription([status_indicator, mqtt_client, bridge])
+    return LaunchDescription([status_indicator, bridge])
