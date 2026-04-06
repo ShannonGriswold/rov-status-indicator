@@ -106,7 +106,7 @@ class LampService:
                               msg: mqtt.MQTTMessage) -> None:
         try:
             new_config = json.loads(msg.payload.decode('utf-8'))
-            self.armed = new_config.armed
+            self.armed = new_config['armed']
             self.write_current_settings_to_hardware()
         except InvalidLampConfig:
             print("error applying new settings " + str(msg.payload))
