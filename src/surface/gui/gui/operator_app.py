@@ -9,6 +9,7 @@ from gui.widgets.ip_widget import IPWidget
 from gui.widgets.logger import Logger
 from gui.widgets.tabs.general_debug_tab import GeneralDebugTab
 from gui.widgets.tabs.shipwreck import ShipwreckTab
+from gui.widgets.tabs.indicator import IndicatorTab
 from gui.widgets.temperature import TemperatureSensor
 from gui.widgets.timer import InteractiveTimer
 
@@ -56,6 +57,7 @@ class OperatorApp(App):
         self.tabs.addTab(GeneralDebugTab(), 'General Debug')
         self.shipwreck_tab = ShipwreckTab()
         self.tabs.addTab(self.shipwreck_tab, SHIPWRECK_TEXT)
+        self.tabs.addTab(IndicatorTab(), "Indicator")
         self.tabs.currentChanged.connect(self.changed_tabs)
         root_layout.addWidget(self.tabs)
 
