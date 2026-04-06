@@ -16,8 +16,7 @@ setup(
         (
             str(Path('share') / PACKAGE_NAME / 'launch'),
             [str(path) for path in Path('launch').glob('*launch.[pxy][yma]*')],
-        ),
-        (os.path.join('share', PACKAGE_NAME, 'config'), glob('config/*.yaml'))
+        )
     ],
     install_requires=['setuptools'],
     zip_safe=True,
