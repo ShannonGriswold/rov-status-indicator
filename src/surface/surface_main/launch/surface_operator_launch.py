@@ -11,6 +11,7 @@ def generate_launch_description() -> LaunchDescription:
     gui_path = get_package_share_directory('gui')
     flight_control_path = get_package_share_directory('flight_control')
     transceiver_path = get_package_share_directory('transceiver')
+    indicator_path = get_package_share_directory('status_indicator')
 
     # Launches Gui
     gui_launch = IncludeLaunchDescription(
@@ -31,12 +32,20 @@ def generate_launch_description() -> LaunchDescription:
         ),
     )
 
+    # Launches Status Indicator
+    indicator_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [str(Path(indicator_path) / 'launch' / 'status_indicator_launch.py')]
+        ),
+    )
+
     namespace_launch = GroupAction(
         actions=[
             PushRosNamespace('surface'),
             gui_launch,
             flight_control_launch,
             transceiver_launch,
+            indicator_launch,
         ]
     )
 
