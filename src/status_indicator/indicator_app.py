@@ -66,6 +66,7 @@ class IndicatorApp(App):
         self.mqtt.publish(TOPIC_ARM, message, qos=1)
 
     def _update_ui(self, new_state: dict[str, Any]) -> None:
+        self.armed = new_state['armed']
         if new_state['armed']:
             self.arm_text = 'Armed'
         else:
