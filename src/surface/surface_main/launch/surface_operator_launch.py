@@ -18,6 +18,13 @@ def generate_launch_description() -> LaunchDescription:
         PythonLaunchDescriptionSource([str(Path(gui_path) / 'launch' / 'operator_launch.py')]),
     )
 
+    # Launches Status Indicator
+    indicator_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [str(Path(indicator_path) / 'launch' / 'status_indicator_launch.py')]
+        ),
+    )
+
     # Launches flight_control (auto docking, manual control, etc.)
     flight_control_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -32,20 +39,13 @@ def generate_launch_description() -> LaunchDescription:
         ),
     )
 
-    # Launches Status Indicator
-    indicator_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [str(Path(indicator_path) / 'launch' / 'status_indicator_launch.py')]
-        ),
-    )
-
     namespace_launch = GroupAction(
         actions=[
             PushRosNamespace('surface'),
             gui_launch,
+            indicator_launch,
             flight_control_launch,
             transceiver_launch,
-            indicator_launch,
         ]
     )
 

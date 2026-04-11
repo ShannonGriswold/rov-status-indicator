@@ -80,10 +80,7 @@ class BridgeNode(Node):
                     time.sleep(1)
                 else:
                     raise
-        try:
-            self.remote_client.loop_start()
-        finally:
-            print('errored')
+        self.remote_client.loop_start()
 
     def remote_on_disconnect(self, _client: mqtt.Client, _userdata: Any,
                     _disconnect_flags: mqtt.DisconnectFlags,

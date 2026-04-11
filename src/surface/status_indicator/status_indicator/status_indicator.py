@@ -5,10 +5,10 @@ from std_msgs.msg import Bool
 
 from rov_msgs.msg import VehicleState
 
-SIMULATION_CHANGE_VEHICLE_STATE = 'indicator/changeVehicleState'
-SIMULATION_TOPIC_VEHICLE_STATE = 'indicator/vehicleState'
-SIMULATION_TOPIC_ARM = 'indicator/arm'
-SIMULATION_TOPIC_FLOODING = 'indicator/flooding'
+SIMULATION_CHANGE_VEHICLE_STATE = '/indicator/changeVehicleState'
+SIMULATION_TOPIC_VEHICLE_STATE = '/indicator/vehicleState'
+SIMULATION_TOPIC_ARM = '/indicator/arm'
+SIMULATION_TOPIC_FLOODING = '/indicator/flooding'
 
 class StatusIndicatorNode(Node):
     armed = False
