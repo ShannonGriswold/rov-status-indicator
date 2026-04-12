@@ -18,7 +18,7 @@ class StatusIndicatorNode(Node):
     def __init__(self) -> None:
         super().__init__('status_indicator', parameter_overrides=[])
 
-        self.simulation_param = self.declare_parameter('status-simulation', value=False)
+        self.simulation_param = self.declare_parameter('status-simulation', value=False).value
 
         self.vehicle_state_publisher = self.create_publisher(VehicleState,
                                             SIMULATION_TOPIC_VEHICLE_STATE,

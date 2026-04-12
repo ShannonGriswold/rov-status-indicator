@@ -42,7 +42,7 @@ class BridgeNode(Node):
     def __init__(self) -> None:
         super().__init__('bridge', parameter_overrides=[])
 
-        self.simulation_param = self.declare_parameter('status-simulation', value=False)
+        self.simulation_param = self.declare_parameter('status-simulation', value=False).value
 
         self.topics = SIMULATION_ROS_TOPICS if self.simulation_param else REAL_ROS_TOPICS
 
