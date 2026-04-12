@@ -12,10 +12,19 @@ from rclpy.qos import qos_profile_system_default
 from std_msgs.msg import Bool
 
 from rov_msgs.msg import StatusIPAddress, VehicleState
+from rov_msgs.srv import VehicleArming
 
-ROS_TOPIC_VEHICLE_STATE = '/indicator/vehicleState'
-ROS_TOPIC_FLOODING = '/indicator/flooding'
-ROS_TOPIC_ARM = '/indicator/arm'
+SIMULATION_ROS_TOPICS = {
+    'vehicleState': '/indicator/vehicleState',
+    'flooding': '/indicator/flooding',
+    'arm': '/indicator/arm'
+}
+
+REAL_ROS_TOPICS = {
+    'vehicleState': 'vehicle_state_event',
+    'flooding': 'flooding',
+    'arm': 'arming'
+}
 
 ROS_TOPIC_ADD_STATUS_INDICATOR = 'addStatusIndicator'
 
@@ -33,12 +42,17 @@ class BridgeNode(Node):
     def __init__(self) -> None:
         super().__init__('bridge', parameter_overrides=[])
 
+        self.simulation_param = self.declare_parameter('status-simulation', value=False).value
+
+        self.topics = SIMULATION_ROS_TOPICS if self.simulation_param else REAL_ROS_TOPICS
+
         logging.basicConfig(level=logging.DEBUG)
 
         self.vehicle_state_subscriber = self.create_subscription(VehicleState,
-                ROS_TOPIC_VEHICLE_STATE, self.on_message_publish_state, qos_profile_system_default)
+                self.topics['vehicleState'], self.on_message_publish_state, qos_profile_system_default)
 
-        self.arm_publisher = self.create_publisher(Bool, ROS_TOPIC_ARM, qos_profile_system_default)
+        self.arm_publisher = self.create_publisher(Bool, self.topics['arm'], qos_profile_system_default)
+        self.arm_client = self.create_client(VehicleArming, 'arming')
 
         self.ip_address_subscriber = self.create_subscription(StatusIPAddress,
                                     ROS_TOPIC_ADD_STATUS_INDICATOR, self.on_message_add_indicator,
@@ -49,7 +63,7 @@ class BridgeNode(Node):
     def remote_on_connect(self, client: mqtt.Client, _userdata: Any,
                    _flags: mqtt.ConnectFlags, reason_code: paho.mqtt.reasoncodes.ReasonCode,
                    _properties: paho.mqtt.properties.Properties | None) -> None:
-        print(f'Connected with reason code: {reason_code}')
+        self.get_logger().info(f'Connected with reason code: {reason_code}')
 
         client.subscribe(MQTT_TOPIC_ARM, qos=1)
 
@@ -60,13 +74,13 @@ class BridgeNode(Node):
                 remote_client.connect(ip_addr,
                                      port=port,
                                      keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
-                print('Connected to remote broker')
+                self.get_logger().info('Connected to remote broker')
                 break
             except ConnectionRefusedError:
                 current_time = time.time()
                 delay = current_time - start_time
                 if (delay) < MAX_STARTUP_WAIT_SECS:
-                    print('Error connecting to broker; delaying and '
+                    self.get_logger().warning('Error connecting to broker; delaying and '
                           f'will retry; delay={delay:.0f}')
                     time.sleep(1)
                 else:
@@ -77,12 +91,12 @@ class BridgeNode(Node):
                     _disconnect_flags: mqtt.DisconnectFlags,
                     reason_code: paho.mqtt.reasoncodes.ReasonCode,
                     _properties: paho.mqtt.properties.Properties | None) -> None:
-        print(f'Disconnected with reason code: {reason_code}')
+        self.get_logger().warning(f'Disconnected with reason code: {reason_code}')
         client.reconnect()
 
     def default_on_message(self, _client: mqtt.Client, _userdata: Any,
                            msg: mqtt.MQTTMessage) -> None:
-        print('Received unexpected message on topic ' +
+        self.get_logger().warning('Received unexpected message on topic ' +
               msg.topic + " with payload '" + str(msg.payload) + "'")
 
     def on_message_publish_state(self, message: VehicleState) -> None:
@@ -99,13 +113,21 @@ class BridgeNode(Node):
 
     def on_message_recieve_arm(self, _client: mqtt.Client, _userdata: Any,
                                msg: mqtt.MQTTMessage) -> None:
+        message_value = None
         try:
             message = json.loads(msg.payload.decode('utf-8'))
-            payload = Bool(data=message['armed'])
-            self.arm_publisher.publish(payload)
+            message_value = message['armed']
         except Exception:
-            print(msg.payload)
-            print('Invalid arm message')
+            self.get_logger().error('Invalid arm message')
+        if message_value is not None:
+            if self.simulation_param:
+                payload = Bool(data=message_value)
+                self.arm_publisher.publish(payload)
+            else:
+                request = VehicleArming.Request(arm=message_value)
+                response = self.arm_client.call(request)
+                if not response or not response.message_sent:
+                    self.get_logger().warning('Failed to arm or disarm')
 
     def on_message_add_indicator(self, message: StatusIPAddress) -> None:
         client_id = REMOTE_MQTT_CLIENT_ID + str(len(self.remote_clients))
