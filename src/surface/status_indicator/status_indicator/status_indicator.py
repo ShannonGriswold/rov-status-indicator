@@ -18,6 +18,8 @@ class StatusIndicatorNode(Node):
     def __init__(self) -> None:
         super().__init__('status_indicator', parameter_overrides=[])
 
+        self.simulation_param = self.declare_parameter('status-simulation', value=False)
+
         self.vehicle_state_publisher = self.create_publisher(VehicleState,
                                             SIMULATION_TOPIC_VEHICLE_STATE,
                                             qos_profile_system_default)
@@ -62,7 +64,10 @@ def main() -> None:
     rclpy.init()
     indicator_node = StatusIndicatorNode()
 
-    rclpy.spin(indicator_node)
+    if indicator_node.simulation_param:
+        rclpy.spin(indicator_node)
+    else:
+        indicator_node.destroy_node()
 
 if __name__ == '__main__':
     main()

@@ -16,6 +16,9 @@ def generate_launch_description() -> LaunchDescription:
         exec_name='status_indicator',
         emulate_tty=True,
         output='screen',
+        parameters=[
+            {'status-simulation': LaunchConfiguration('status-simulation', default=False)}
+        ],
     )
 
     bridge = Node(
@@ -23,6 +26,9 @@ def generate_launch_description() -> LaunchDescription:
         executable='bridge',
         emulate_tty=True,
         output='screen',
+        parameters=[
+            {'status-simulation': LaunchConfiguration('status-simulation', default=False)}
+        ],
     )
 
     return LaunchDescription([status_indicator, bridge])
