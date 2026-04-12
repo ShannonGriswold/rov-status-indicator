@@ -1,5 +1,3 @@
-from glob import glob
-import os
 from pathlib import Path
 
 from setuptools import find_packages, setup
@@ -16,8 +14,7 @@ setup(
         (
             str(Path('share') / PACKAGE_NAME / 'launch'),
             [str(path) for path in Path('launch').glob('*launch.[pxy][yma]*')],
-        ),
-        (os.path.join('share', PACKAGE_NAME, 'config'), glob('config/*.yaml'))
+        )
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -27,6 +24,7 @@ setup(
     license='Apache License 2.0',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': ['status_indicator = status_indicator.status_indicator:main'],
+        'console_scripts': ['status_indicator = status_indicator.status_indicator:main',
+                            'bridge = status_indicator.bridge:main'],
     },
 )

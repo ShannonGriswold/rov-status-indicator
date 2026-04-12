@@ -16,24 +16,19 @@ def generate_launch_description() -> LaunchDescription:
         exec_name='status_indicator',
         emulate_tty=True,
         output='screen',
+        parameters=[
+            {'status-simulation': LaunchConfiguration('status-simulation', default=False)}
+        ],
     )
 
-    params_file_path = os.path.join(
-        get_package_share_directory('status_indicator'),
-        'config',
-        'params.yaml'
-    )
-
-    print(params_file_path)
-
-    mqtt_client = Node(
-        package='mqtt_client',
-        executable='mqtt_client',
-        name='mqtt_client',
+    bridge = Node(
+        package='status_indicator',
+        executable='bridge',
+        emulate_tty=True,
         output='screen',
         parameters=[
-            params_file_path
-        ]
+            {'status-simulation': LaunchConfiguration('status-simulation', default=False)}
+        ],
     )
 
-    return LaunchDescription([status_indicator, mqtt_client])
+    return LaunchDescription([status_indicator, bridge])

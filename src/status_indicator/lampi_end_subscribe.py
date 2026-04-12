@@ -1,10 +1,10 @@
 from paho.mqtt import subscribe  # noqa: INP001
 
 while True:
-    msg = subscribe.simple('hiMqtt', hostname='localhost')
+    msg = subscribe.simple('rov/vehicleState', hostname='localhost')
     print('lampi_end:')
     # print(f'{msg.topic} Pi Connected: {msg.payload[4]} Ardusub Connected {msg.payload[5]} Armed {msg.payload[6]}')
-
+    
     pi_connected = bool(msg.payload[4])
 
     ardusub_connected = bool(msg.payload[5])

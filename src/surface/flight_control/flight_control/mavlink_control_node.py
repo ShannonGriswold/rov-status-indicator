@@ -96,6 +96,7 @@ MANIP_TOGGLE_MODE = True
 @dataclass
 class ManipButton:
     claw: str
+    relay: int
     last_button_state: bool = False
     is_active: bool = False
 
@@ -157,8 +158,8 @@ class MavlinkManualControlNode(Node):
         )
 
         self.manip_buttons: dict[int, ManipButton] = {
-            self.profile.manip_left: ManipButton('left'),
-            self.profile.manip_right: ManipButton('right'),
+            self.profile.manip_left: ManipButton('left', 1),
+            self.profile.manip_right: ManipButton('right', 0),
         }
 
         self.get_logger().info('Connecting to mavlink...')
@@ -330,6 +331,19 @@ class MavlinkManualControlNode(Node):
                 manip_button.is_active = not just_pressed
 
             if was_active != manip_button.is_active:
+                self.mavlink.mav.command_long_send(
+                    self.mavlink.target_system,
+                    self.mavlink.target_component,
+                    mavutil.mavlink.MAV_CMD_DO_SET_RELAY,
+                    0,
+                    manip_button.relay,
+                    1 if manip_button.is_active else 0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                )
                 manip_msg = Manip(manip_id=manip_button.claw, activated=manip_button.is_active)
                 self.manip_publisher.publish(manip_msg)
 

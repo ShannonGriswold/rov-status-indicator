@@ -11,10 +11,18 @@ def generate_launch_description() -> LaunchDescription:
     gui_path = get_package_share_directory('gui')
     flight_control_path = get_package_share_directory('flight_control')
     transceiver_path = get_package_share_directory('transceiver')
+    indicator_path = get_package_share_directory('status_indicator')
 
     # Launches Gui
     gui_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([str(Path(gui_path) / 'launch' / 'operator_launch.py')]),
+    )
+
+    # Launches Status Indicator
+    indicator_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [str(Path(indicator_path) / 'launch' / 'status_indicator_launch.py')]
+        ),
     )
 
     # Launches flight_control (auto docking, manual control, etc.)
@@ -35,6 +43,7 @@ def generate_launch_description() -> LaunchDescription:
         actions=[
             PushRosNamespace('surface'),
             gui_launch,
+            indicator_launch,
             flight_control_launch,
             transceiver_launch,
         ]

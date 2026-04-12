@@ -1,77 +1,73 @@
-import numpy as np
 import rclpy
-from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
-from rclpy.publisher import Publisher
 from rclpy.qos import qos_profile_system_default
-from rov_msgs.msg import VehicleState
 from std_msgs.msg import Bool
-import time
 
+from rov_msgs.msg import VehicleState
+
+SIMULATION_CHANGE_VEHICLE_STATE = '/indicator/changeVehicleState'
+SIMULATION_TOPIC_VEHICLE_STATE = '/indicator/vehicleState'
+SIMULATION_TOPIC_ARM = '/indicator/arm'
+SIMULATION_TOPIC_FLOODING = '/indicator/flooding'
 
 class StatusIndicatorNode(Node):
+    armed = False
+    pi_connected = True
+    ardusub_connected = True
+
     def __init__(self) -> None:
         super().__init__('status_indicator', parameter_overrides=[])
 
-        self.publisher = self.create_publisher(VehicleState, '/hi', qos_profile_system_default)
-        # self.publisher = self.create_publisher(Bool, '/testBool', qos_profile_system_default)
+        self.simulation_param = self.declare_parameter('status-simulation', value=False).value
 
-        self.subscriber = self.create_subscription(Bool, '/hello', self.arm_callback, qos_profile_system_default)
+        self.vehicle_state_publisher = self.create_publisher(VehicleState,
+                                            SIMULATION_TOPIC_VEHICLE_STATE,
+                                            qos_profile_system_default)
 
-        while True:
-            self.publish_messages()
+        self.changed_vehicle_state_subscriber = self.create_subscription(VehicleState,
+                                            SIMULATION_CHANGE_VEHICLE_STATE,
+                                            self.change_vehicle_state_callback,
+                                            qos_profile_system_default)
+
+        self.armed_subscriber = self.create_subscription(Bool, SIMULATION_TOPIC_ARM,
+                                            self.arm_callback,
+                                            qos_profile_system_default)
+
 
     def arm_callback(self, message: Bool) -> None:
         print(f'Armed: {message.data}')
+        if self.ardusub_connected:
+            self.armed = message.data
+            new_message = VehicleState(pi_connected=self.pi_connected,
+                                       ardusub_connected=self.ardusub_connected,
+                                       armed=self.armed)
+            self.vehicle_state_publisher.publish(new_message)
 
-    def publish_messages(self) -> None:
-        # message = Bool(data=True)
-        # self.publisher.publish(message)
-        # print("True")
+        print('Cannot change armed state while ardusub is disconnected')
 
-        # time.sleep(3)
+    def change_vehicle_state_callback(self, message: VehicleState) -> None:
+        print('Changing simulated vehicle state')
+        self.pi_connected = message.pi_connected
+        self.ardusub_connected = message.ardusub_connected
 
-        # message = Bool(data=False)
-        # self.publisher.publish(message)
-        # print("False")
+        if not message.ardusub_connected:
+            self.armed = False
+        else:
+            self.armed = message.armed
 
-        # time.sleep(3)
-
-
-        state = VehicleState(pi_connected=False, ardusub_connected=False, armed=False)
-        self.publisher.publish(state)
-
-        print('Pi Connected: 0, Ardusub Connected: 0 Armed: 0')
-
-        time.sleep(3)
-
-        state = VehicleState(pi_connected=True, ardusub_connected=False, armed=False)
-        self.publisher.publish(state)
-
-        print('Pi Connected: 1, Ardusub Connected: 0 Armed: 0')
-
-        time.sleep(3)
-
-        state = VehicleState(pi_connected=False, ardusub_connected=True, armed=False)
-        self.publisher.publish(state)
-
-        print('Pi Connected: 0, Ardusub Connected: 1 Armed: 0')
-
-        time.sleep(3)
-
-        state = VehicleState(pi_connected=False, ardusub_connected=False, armed=True)
-        self.publisher.publish(state)
-
-        print('Pi Connected: 0, Ardusub Connected: 0 Armed: 1')
-
-        time.sleep(3)
+        new_message = VehicleState(pi_connected=self.pi_connected,
+                                   ardusub_connected=self.ardusub_connected, armed=self.armed)
+        self.vehicle_state_publisher.publish(new_message)
 
 
 def main() -> None:
     rclpy.init()
     indicator_node = StatusIndicatorNode()
 
-    rclpy.spin(indicator_node)
+    if indicator_node.simulation_param:
+        rclpy.spin(indicator_node)
+    else:
+        indicator_node.destroy_node()
 
 if __name__ == '__main__':
     main()
