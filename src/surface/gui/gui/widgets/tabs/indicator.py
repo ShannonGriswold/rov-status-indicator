@@ -1,9 +1,22 @@
-from PyQt6.QtWidgets import QListWidgetItem, QListWidget, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QWidget, QLabel
-from rclpy.qos import qos_profile_system_default, qos_profile_default
-from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import pyqtSignal, pyqtSlot
+from PyQt6.QtWidgets import (
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+from rclpy.qos import qos_profile_system_default
+
 from gui.gui_node import GUINode
-from rov_msgs.msg import VehicleState
-from rov_msgs.msg import StatusIPAddress
+from gui.styles.custom_styles import WidgetState
+from gui.widgets.circle import CircleIndicator
+from rov_msgs.msg import StatusIPAddress, VehicleState
 
 TOPIC_CHANGE_VEHICLE_STATE = '/indicator/changeVehicleState'
 TOPIC_VEHICLE_STATE = '/indicator/vehicleState'
@@ -14,18 +27,35 @@ class IndicatorTab(QWidget):
     def __init__(self) -> None:
         super().__init__()
 
-        
-        under_button_bar = QVBoxLayout()
+        self.armed = False
+        self.signal.connect(self.refresh)
+        GUINode().create_signal_subscription(VehicleState, TOPIC_VEHICLE_STATE, self.signal)
+        self.publisher = GUINode().create_publisher(VehicleState, TOPIC_CHANGE_VEHICLE_STATE,
+                                                    qos_profile_system_default)
+        self.IPPublisher = GUINode().create_publisher(StatusIPAddress, TOPIC_ADD_STATUS_INDICATOR,
+                                                      qos_profile_system_default)
+
+        root_layout = QVBoxLayout()
+        root_layout.addWidget(self.create_indicator_group())
+        root_layout.addWidget(self.create_simulation_group())
+        root_layout.addStretch()
+        self.setLayout(root_layout)
+
+
+    def create_indicator_group(self) -> QGroupBox:
+        indicator_group = QGroupBox('Status Indicators')
+
+        add_indicator_section = QVBoxLayout()
 
         ip_input_row = QHBoxLayout()
         self.input = QLineEdit()
-        ip_address_label = QLabel(text="IP Address: ")
+        ip_address_label = QLabel(text='IP Address: ')
 
         ip_input_row.addWidget(ip_address_label)
         ip_input_row.addWidget(self.input)
 
         ip_input_row.setStretchFactor(ip_address_label, 1)
-        ip_input_row.setStretchFactor(self.input, 4)
+        ip_input_row.setStretchFactor(self.input, 3)
         ip_input_row.addStretch(stretch=4)
 
         port_input_row = QHBoxLayout()
@@ -36,7 +66,7 @@ class IndicatorTab(QWidget):
         port_input_row.addWidget(self.port_input)
 
         port_input_row.setStretchFactor(port_address_label, 1)
-        port_input_row.setStretchFactor(self.port_input, 4)
+        port_input_row.setStretchFactor(self.port_input, 3)
         port_input_row.addStretch(stretch=4)
 
         add_ip_button_layout = QHBoxLayout()
@@ -47,54 +77,51 @@ class IndicatorTab(QWidget):
 
         add_ip_button_layout.addWidget(ip_button)
         add_ip_button_layout.setStretchFactor(ip_button, 2)
-        add_ip_button_layout.addStretch(7)
+        add_ip_button_layout.addStretch(8)
 
-
-
-        under_button_bar.addLayout(ip_input_row)
-        under_button_bar.addLayout(port_input_row)
-        under_button_bar.addLayout(add_ip_button_layout)
-
-        list_layout = QHBoxLayout()
         self.listWidget = QListWidget()
-        list_layout.addWidget(self.listWidget)
-
         self.listWidget.setMaximumHeight(125)
 
+        add_indicator_section.addLayout(ip_input_row)
+        add_indicator_section.addLayout(port_input_row)
+        add_indicator_section.addLayout(add_ip_button_layout)
+        add_indicator_section.addWidget(self.listWidget)
 
-        #print(self.input.maximumWidth())
-        self.armed = False
-        self.signal.connect(self.refresh)
-        GUINode().create_signal_subscription(VehicleState, TOPIC_VEHICLE_STATE, self.signal)
-        self.publisher = GUINode().create_publisher(VehicleState, TOPIC_CHANGE_VEHICLE_STATE,
-                                                    qos_profile_system_default)
-        self.IPPublisher = GUINode().create_publisher(StatusIPAddress, TOPIC_ADD_STATUS_INDICATOR,
-                                                      qos_profile_system_default)
+        indicator_group.setLayout(add_indicator_section)
 
+        return indicator_group
 
-        top_bar = QHBoxLayout()
+    def create_simulation_group(self) -> QGroupBox:
+        simulation_group = QGroupBox('Simulation Controls')
 
-        button1 = QPushButton()
+        simulation_layout = QGridLayout()
+
         self.armed_label = QLabel('Disarmed')
-        top_bar.addWidget(self.armed_label)
-        button1.setText('ARM')
-        button1.clicked.connect(self.publish_arm)
-        top_bar.addWidget(button1)
+        self.arm_indicator = CircleIndicator(radius=10)
+        self.arm_indicator.set_state(WidgetState.OFF)
 
-        button2 = QPushButton()
-        button2.setText('DISARM')
-        button2.clicked.connect(self.publish_disarm)
-        top_bar.addWidget(button2)
+        arm_button = QPushButton()
+        arm_button.setText('ARM')
+        arm_button.clicked.connect(self.publish_arm)
 
+        disarm_button = QPushButton()
+        disarm_button.setText('DISARM')
+        disarm_button.clicked.connect(self.publish_disarm)
 
-        top_bar.addStretch(2)
-        root_layout = QVBoxLayout()
-        root_layout.addLayout(under_button_bar)
-        root_layout.addLayout(list_layout)
-        root_layout.addLayout(top_bar)
-        root_layout.addStretch()
-        self.setLayout(root_layout)
+        simulation_layout.addWidget(self.armed_label, 0, 1)
+        simulation_layout.addWidget(self.arm_indicator, 0, 2)
+        simulation_layout.addWidget(arm_button, 0, 3)
+        simulation_layout.addWidget(disarm_button, 0, 4)
 
+        simulation_layout.setColumnStretch(1, 1)
+        simulation_layout.setColumnStretch(2, 1)
+        simulation_layout.setColumnStretch(3, 1)
+        simulation_layout.setColumnStretch(4, 1)
+        simulation_layout.setColumnStretch(5, 3)
+
+        simulation_group.setLayout(simulation_layout)
+
+        return simulation_group
 
 
     def publish_arm(self) -> None:
@@ -117,20 +144,16 @@ class IndicatorTab(QWidget):
             ip_item = QListWidgetItem(f'IP Address: {ip_input} \tPort: {port_number}')
             self.listWidget.addItem(ip_item)
         except (TypeError, ValueError):
-            GUINode().get_logger().error("Invalid port")
-        
-        
-        
-    
+            GUINode().get_logger().error('Invalid port')
+
     @pyqtSlot(VehicleState)
     def refresh(self, msg: VehicleState) -> None:
         if msg.armed:
             self.armed = True
-            self.armed_label.setText("Armed")
+            self.armed_label.setText('Armed')
+            self.arm_indicator.set_state(WidgetState.ON)
         else:
             self.armed = False
-            self.armed_label.setText("Disarmed")
-        
+            self.armed_label.setText('Disarmed')
+            self.arm_indicator.set_state(WidgetState.OFF)
 
-
-           
