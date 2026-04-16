@@ -122,9 +122,9 @@ class LampService:
     def write_current_settings_to_hardware(self) -> None:
         armed = self.armed
         if armed:
-            self.lamp_driver.change_color(0, 255, 0)
+            self.lamp_driver.change_color(0, PWM_RANGE, 0)
         else:
-            self.lamp_driver.change_color(255,0,0)
+            self.lamp_driver.change_color(PWM_RANGE,0,0)
 
 if __name__ == '__main__':
     LampService().serve()
