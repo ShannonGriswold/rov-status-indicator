@@ -15,7 +15,7 @@ BoxLayout:
       padding_x: dp(10)
       font_size: sp(20)
     Label:
-      size_hint_y: 0.25
+      size_hint_y: 0.5
       size_hint_x:0.25
       pos_hint: {'center_x':0.5, 'center_y':0.5}
       canvas:
@@ -24,6 +24,69 @@ BoxLayout:
         Ellipse:
           size: (self.size[1], self.size[1])
           pos: self.pos
+  BoxLayout:
+    orientation: 'horizontal'
+    Label:
+      text: app.pi_text
+      text_size: self.size
+      size_hint_x: 0.75
+      halign: 'left'
+      valign: 'middle'
+      padding_x: dp(10)
+      font_size: sp(20)
+    Label:
+      size_hint_y: 0.5
+      size_hint_x:0.25
+      pos_hint: {'center_x':0.5, 'center_y':0.5}
+      canvas:
+        Color:
+          rgba: green if app.armed else red
+        Ellipse:
+          size: (self.size[1], self.size[1])
+          pos: self.pos
+  BoxLayout:
+    orientation: 'horizontal'
+    Label:
+      text: app.ardusub_text
+      text_size: self.size
+      size_hint_x: 0.75
+      halign: 'left'
+      valign: 'middle'
+      padding_x: dp(10)
+      font_size: sp(20)
+    Label:
+      size_hint_y: 0.5
+      size_hint_x:0.25
+      pos_hint: {'center_x':0.5, 'center_y':0.5}
+      canvas:
+        Color:
+          rgba: green if app.armed else red
+        Ellipse:
+          size: (self.size[1], self.size[1])
+          pos: self.pos
+  BoxLayout:
+    orientation: 'horizontal'
+    Label:
+      text: app.flooding_text
+      text_size: self.size
+      size_hint_x: 0.75
+      halign: 'left'
+      valign: 'middle'
+      padding_x: dp(10)
+      font_size: sp(20)
+    Label:
+      size_hint_y: 0.5
+      size_hint_x:0.25
+      pos_hint: {'center_x':0.5, 'center_y':0.5}
+      canvas:
+        Color:
+          rgba: green if app.armed else red
+        Ellipse:
+          size: (self.size[1], self.size[1])
+          pos: self.pos
+
+ 
+
   BoxLayout:
     orientation: 'horizontal'
     Button:

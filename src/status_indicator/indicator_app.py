@@ -19,6 +19,9 @@ class IndicatorApp(App):
 
     gpio17_pressed = BooleanProperty(False)
     arm_text = StringProperty("Disarmed")
+    ardusub_text = StringProperty("Ardusub Disconnected")
+    pi_text = StringProperty("Pi Disconnected")
+    flooding_text = StringProperty("No Water Detected")
     armed = BooleanProperty(False)
     pi_connected = BooleanProperty(False)
     ardusub_connected = BooleanProperty(False)
@@ -67,10 +70,20 @@ class IndicatorApp(App):
 
     def _update_ui(self, new_state: dict[str, Any]) -> None:
         self.armed = new_state['armed']
+        self.pi_connected = new_state['pi_connected']
+        self.ardusub_connected = new_state['ardusub_connected']
         if new_state['armed']:
             self.arm_text = 'Armed'
         else:
             self.arm_text = 'Disarmed'
+        if new_state['pi_connected']:
+            self.pi_text = 'Pi Connected'
+        else:
+            self.pi_text = 'Pi Disconnected'
+        if new_state['ardusub_connected']:
+            self.ardusub_text = 'Ardusub Connected'
+        else:
+            self.ardusub_text = 'Ardusub Disconnected'
 
     def set_up_gpio_and_network_status_popup(self) -> None:
         """Set up a popup to display the Lampi's IP
