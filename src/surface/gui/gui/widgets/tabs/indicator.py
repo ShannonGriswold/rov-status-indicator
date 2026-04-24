@@ -22,6 +22,9 @@ TOPIC_CHANGE_VEHICLE_STATE = '/indicator/changeVehicleState'
 TOPIC_VEHICLE_STATE = '/indicator/vehicleState'
 TOPIC_ADD_STATUS_INDICATOR = 'addStatusIndicator'
 
+WEB_HOST = 'ec2-98-90-18-209.compute-1.amazonaws.com'
+WEB_PORT = 50001
+
 class IndicatorTab(QWidget):
     signal = pyqtSignal(VehicleState)
     def __init__(self) -> None:
@@ -40,6 +43,9 @@ class IndicatorTab(QWidget):
         root_layout.addWidget(self.create_simulation_group())
         root_layout.addStretch()
         self.setLayout(root_layout)
+
+        # Add the ec2 by default on start
+        self.add_ip(WEB_HOST, WEB_PORT)
 
 
     def create_indicator_group(self) -> QGroupBox:
@@ -73,7 +79,7 @@ class IndicatorTab(QWidget):
 
         ip_button = QPushButton()
         ip_button.setText('Add IP address')
-        ip_button.clicked.connect(self.add_ip)
+        ip_button.clicked.connect(self.add_ip_button_callback)
 
         add_ip_button_layout.addWidget(ip_button)
         add_ip_button_layout.setStretchFactor(ip_button, 2)
@@ -135,13 +141,19 @@ class IndicatorTab(QWidget):
         print(payload)
         self.publisher.publish(payload)
 
-    def add_ip(self) -> None:
+    def add_ip_button_callback(self) -> None:
         ip_input = self.input.text()
         try:
             port_number = int(self.port_input.text())
-            payload = StatusIPAddress(ip_address = ip_input, port = port_number)
+            self.add_ip(ip_input, port_number)
+        except (TypeError, ValueError):
+            GUINode().get_logger().error('Invalid port')
+
+    def add_ip(self, ip:str, port:int) -> None:
+        try:
+            payload = StatusIPAddress(ip_address = ip, port = port)
             self.IPPublisher.publish(payload)
-            ip_item = QListWidgetItem(f'IP Address: {ip_input} \tPort: {port_number}')
+            ip_item = QListWidgetItem(f'IP Address: {ip} \tPort: {port}')
             self.listWidget.addItem(ip_item)
         except (TypeError, ValueError):
             GUINode().get_logger().error('Invalid port')
