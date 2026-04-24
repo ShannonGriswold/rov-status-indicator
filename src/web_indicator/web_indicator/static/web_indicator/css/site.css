@@ -1,0 +1,91 @@
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #1A1A1A;
+}
+
+a, h2, h1, label, p {
+    color: white;
+}
+
+h1 {
+    text-align: center;
+}
+
+.errorlist {
+    color: red;
+}
+
+.page-wrapper {
+    width: 50%;
+    margin: auto;
+    min-height: 100vh;
+    gap: 10px;
+}
+
+/* Navigation links */
+#nav-links {
+    text-align: center;
+}
+
+#nav-links form {
+    display: inline;
+}
+
+.btn {
+    display: inline-block;
+    padding: 6px 12px;
+    margin-bottom: 0;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    background-image: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.btn-default {
+    color: #333;
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+.btn-default:active,
+.btn-default.active {
+  background-color: #ffffff;
+}
+
+.btn-default:hover {
+  background-color: #ebebeb;
+}
+
+.btn-link {
+    border: none;
+    outline: none;
+    background: none;
+    cursor: pointer;
+    color: white;
+    padding: 0;
+    text-decoration: underline;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+/* Alpine.js app container */
+#app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
