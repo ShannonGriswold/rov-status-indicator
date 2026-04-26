@@ -28,6 +28,8 @@ class IndicatorTab(QWidget):
         super().__init__()
 
         self.armed = False
+        self.pi = False
+        self.ardusub = False
         self.signal.connect(self.refresh)
         GUINode().create_signal_subscription(VehicleState, TOPIC_VEHICLE_STATE, self.signal)
         self.publisher = GUINode().create_publisher(VehicleState, TOPIC_CHANGE_VEHICLE_STATE,
@@ -112,6 +114,42 @@ class IndicatorTab(QWidget):
         simulation_layout.addWidget(self.arm_indicator, 0, 2)
         simulation_layout.addWidget(arm_button, 0, 3)
         simulation_layout.addWidget(disarm_button, 0, 4)
+        
+        self.pi_label = QLabel('Pi Disconnected')
+        self.pi_indicator = CircleIndicator(radius=10)
+        self.pi_indicator.set_state(WidgetState.OFF)
+
+        pi_connected_button = QPushButton()
+        pi_connected_button.setText('Pi connected')
+        pi_connected_button.clicked.connect(self.publish_pi_connected)
+
+        pi_disconnected_button = QPushButton()
+        pi_disconnected_button.setText('Pi disconnected')
+        pi_disconnected_button.clicked.connect(self.publish_pi_disconnected)
+
+        simulation_layout.addWidget(self.pi_label, 1, 1)
+        simulation_layout.addWidget(self.pi_indicator, 1, 2)
+        simulation_layout.addWidget(pi_connected_button, 1, 3)
+        simulation_layout.addWidget(pi_disconnected_button, 1, 4)
+        
+        
+        
+        self.ardusub_label = QLabel('Ardusub Disconnected')
+        self.ardusub_indicator = CircleIndicator(radius=10)
+        self.ardusub_indicator.set_state(WidgetState.OFF)
+
+        ardusub_connected_button = QPushButton()
+        ardusub_connected_button.setText('Ardusub connected')
+        ardusub_connected_button.clicked.connect(self.publish_ardusub_connected)
+
+        ardusub_disconnected_button = QPushButton()
+        ardusub_disconnected_button.setText('Ardusub disconnected')
+        ardusub_disconnected_button.clicked.connect(self.publish_ardusub_disconnected)
+
+        simulation_layout.addWidget(self.ardusub_label, 2, 1)
+        simulation_layout.addWidget(self.ardusub_indicator, 2, 2)
+        simulation_layout.addWidget(ardusub_connected_button, 2, 3)
+        simulation_layout.addWidget(ardusub_disconnected_button, 2, 4)
 
         simulation_layout.setColumnStretch(1, 1)
         simulation_layout.setColumnStretch(2, 1)
@@ -125,15 +163,42 @@ class IndicatorTab(QWidget):
 
 
     def publish_arm(self) -> None:
-        payload = VehicleState(pi_connected = True, ardusub_connected = True, armed = True)
+        payload = VehicleState(pi_connected = self.pi, ardusub_connected = self.ardusub, armed = True)
         print(payload)
         self.publisher.publish(payload)
+        print("seeing if it published")
 
 
     def publish_disarm(self) -> None:
-        payload = VehicleState(pi_connected = True, ardusub_connected = True, armed = False)
+        payload = VehicleState(pi_connected = self.pi, ardusub_connected = self.ardusub, armed = False)
         print(payload)
         self.publisher.publish(payload)
+        
+    def publish_pi_connected(self) -> None:
+        payload = VehicleState(pi_connected = True, ardusub_connected = self.ardusub, armed = self.armed)
+        print(payload)
+        self.publisher.publish(payload)
+        print("seeing if it published")
+
+
+    def publish_pi_disconnected(self) -> None:
+        payload = VehicleState(pi_connected = False, ardusub_connected = self.ardusub, armed = self.armed)
+        print(payload)
+        self.publisher.publish(payload)
+
+
+    def publish_ardusub_connected(self) -> None:
+        payload = VehicleState(pi_connected = self.pi, ardusub_connected = True, armed = self.armed)
+        print(payload)
+        self.publisher.publish(payload)
+        print("seeing if it published")
+
+
+    def publish_ardusub_disconnected(self) -> None:
+        payload = VehicleState(pi_connected = self.pi, ardusub_connected = False, armed = self.armed)
+        print(payload)
+        self.publisher.publish(payload)
+
 
     def add_ip(self) -> None:
         ip_input = self.input.text()
@@ -148,6 +213,24 @@ class IndicatorTab(QWidget):
 
     @pyqtSlot(VehicleState)
     def refresh(self, msg: VehicleState) -> None:
+            
+        if msg.pi_connected:
+            self.pi = True
+            self.pi_label.setText('Pi connected')
+            self.pi_indicator.set_state(WidgetState.ON)
+        else:
+            self.pi = False
+            self.pi_label.setText('Pi disconnected')
+            self.pi_indicator.set_state(WidgetState.OFF)
+        if msg.ardusub_connected:
+            self.ardusub = True
+            self.ardusub_label.setText('Ardusub connected')
+            self.ardusub_indicator.set_state(WidgetState.ON)
+        else:
+            self.ardusub = False
+            self.ardusub_label.setText('Ardusub disconnected')
+            self.ardusub_indicator.set_state(WidgetState.OFF)
+            
         if msg.armed:
             self.armed = True
             self.armed_label.setText('Armed')
@@ -156,4 +239,8 @@ class IndicatorTab(QWidget):
             self.armed = False
             self.armed_label.setText('Disarmed')
             self.arm_indicator.set_state(WidgetState.OFF)
+       
+        
+
+
 

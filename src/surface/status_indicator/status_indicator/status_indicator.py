@@ -52,10 +52,10 @@ class StatusIndicatorNode(Node):
 
         if not message.pi_connected:
             self.ardusub_connected = False
-         else:
+        else:
             self.ardusub_connected = message.ardusub_connected
 
-        if not message.ardusub_connected:
+        if not self.ardusub_connected:
             self.armed = False
         else:
             self.armed = message.armed
