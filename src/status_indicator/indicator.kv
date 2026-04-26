@@ -40,7 +40,7 @@ BoxLayout:
       pos_hint: {'center_x':0.5, 'center_y':0.5}
       canvas:
         Color:
-          rgba: green if app.pi_text else red
+          rgba: green if app.pi_connected else red
         Ellipse:
           size: (self.size[1], self.size[1])
           pos: self.pos
@@ -60,7 +60,7 @@ BoxLayout:
       pos_hint: {'center_x':0.5, 'center_y':0.5}
       canvas:
         Color:
-          rgba: green if app.ardusub else red
+          rgba: green if app.ardusub_connected else red
         Ellipse:
           size: (self.size[1], self.size[1])
           pos: self.pos
@@ -80,7 +80,7 @@ BoxLayout:
       pos_hint: {'center_x':0.5, 'center_y':0.5}
       canvas:
         Color:
-          rgba: green if app.ardusub else red
+          rgba: green if app.ardusub_connected else red
         Ellipse:
           size: (self.size[1], self.size[1])
           pos: self.pos
