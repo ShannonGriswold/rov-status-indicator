@@ -40,7 +40,9 @@ function indicatorController() {
 
     // Lamp state (0.0 to 1.0 for sliders, boolean for power)
     armed: false,
-
+    pi_connected: false,
+    ardusub_connected: false,
+    flooding: false,
 
     // Internal state
     client: null,
@@ -53,6 +55,25 @@ function indicatorController() {
     armed_text() {
         let text = this.armed ? "Armed" : "Disarmed";
         return text;
+    },
+
+    pi_text() {
+        let text = this.pi_connected ? "Pi Connected" : "Pi Disconnected";
+        return text;
+    },
+
+    ardusub_text() {
+        let text = this.ardusub_connected ? "Ardusub Connected" : "Ardusub Disconnected";
+        return text;
+    },
+
+    flooding_text() {
+        let text = this.flooding ? "Water detected" : "No water detected";
+        return text;
+    },
+
+    indicator_color(indicator_value) {
+        return indicator_value ? 'lime' : 'red';
     },
 
     // ========================================================================
@@ -130,11 +151,13 @@ function indicatorController() {
 
     onVehicleStateMessage(payload) {
       this.armed = payload.armed;
+      this.pi_connected = payload.pi_connected;
+      this.ardusub_connected = payload.ardusub_connected;
       this.hasReceivedInitialState = true;
     },
 
     onFloodingMessage(payload) {
-      console.log("recieved flooding message");
+      this.flooding = payload.flooding;
     },
 
     // ========================================================================

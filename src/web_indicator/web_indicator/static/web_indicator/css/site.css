@@ -6,12 +6,18 @@ html, body {
   background-color: #1A1A1A;
 }
 
-a, h2, h1, label, p {
+body, a, h2, h1, label, p {
     color: white;
 }
 
 h1 {
     text-align: center;
+}
+
+table {
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+    font-size: 1.2em;
 }
 
 .errorlist {
@@ -23,6 +29,28 @@ h1 {
     margin: auto;
     min-height: 100vh;
     gap: 10px;
+}
+
+.indicator-circle {
+    width: 1em;
+    height: 1em;
+    border-radius: 0.5em;
+}
+
+#arm-btn {
+    background-color: lime;
+    font-size: 1.2em;
+    width: 5em;
+}
+
+#disarm-btn {
+    background-color: #d80d0d;
+    font-size: 1.2em;
+    width: 5em;
+}
+
+td:first-child {
+    width: 15em;
 }
 
 /* Navigation links */
@@ -88,4 +116,15 @@ h1 {
   position: relative;
   width: 100%;
   height: 100%;
+}
+
+@media only all and (max-width: 768px) {
+    .page-wrapper {
+        width: 100%;
+    }
+
+    h1, #nav-links, #outer-pane {
+        margin-left: 1em;
+        margin-right: 1em;
+    }
 }

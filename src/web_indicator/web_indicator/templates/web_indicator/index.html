@@ -32,10 +32,27 @@
          x-cloak
          x-data="indicatorController()"
          x-init="connect()">
-        <p><span x-text="armed_text"></span></p>
+        <table>
+            <tr>
+                <td><span x-text="armed_text"></span></td>
+                <td><div class="indicator-circle" :style="{ 'background-color': indicator_color(armed) }"></div></td>
+            </tr>
+            <tr>
+                <td><span x-text="pi_text"></span></td>
+                <td><div class="indicator-circle" :style="{ 'background-color': indicator_color(pi_connected) }"></div></td>
+            </tr>
+            <tr>
+                <td><span x-text="ardusub_text"></span></td>
+                <td><div class="indicator-circle" :style="{ 'background-color': indicator_color(ardusub_connected) }"></div></td>
+            </tr>
+            <tr>
+                <td><span x-text="flooding_text"></span></td>
+                <td><div class="indicator-circle" :style="{ 'background-color': indicator_color(!flooding) }"></div></td>
+            </tr>
+        </table>
         {% if user.is_superuser %}
-            <button class="arm-btn" @click="sendArm(true)">Arm</button>
-            <button class="arm-btn" @click="sendArm(false)">Disarm</button>
+            <button id="arm-btn" @click="sendArm(true)">Arm</button>
+            <button id="disarm-btn" @click="sendArm(false)">Disarm</button>
         {% endif %}
     </div>
 
