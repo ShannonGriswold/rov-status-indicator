@@ -50,6 +50,9 @@ class LampService:
         self.lamp_driver: LampDriver = LampDriver()
         self._client: mqtt.Client = self._create_and_configure_broker_client()
         self.armed = False
+        self.pi = False
+        self.ardusub = False
+        self.flooding = False
         self.write_current_settings_to_hardware()
 
     def _create_and_configure_broker_client(self) -> mqtt.Client:
@@ -107,6 +110,8 @@ class LampService:
         try:
             new_config = json.loads(msg.payload.decode('utf-8'))
             self.armed = new_config['armed']
+            self.pi = new_config['pi_connected']
+            self.ardusub = new_config['ardusub_connected']
             self.write_current_settings_to_hardware()
         except InvalidLampConfig:
             print("error applying new settings " + str(msg.payload))
@@ -121,7 +126,9 @@ class LampService:
 
     def write_current_settings_to_hardware(self) -> None:
         armed = self.armed
-        if armed:
+        pi = self.pi
+        ardusub = self.ardusub
+        if pi:
             self.lamp_driver.change_color(0, PWM_RANGE, 0)
         else:
             self.lamp_driver.change_color(PWM_RANGE,0,0)
