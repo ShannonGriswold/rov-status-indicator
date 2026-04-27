@@ -1,0 +1,65 @@
+{% extends "web_indicator/base.html" %}
+{% load static %}
+
+{% block additional_head_content %}
+
+  <!-- Import map for ES modules - allows npm-style imports without a bundler -->
+  <script type="importmap">
+  {
+    "imports": {
+      "mqtt": "https://unpkg.com/mqtt@5.14.1/dist/mqtt.esm.js"
+    }
+  }
+  </script>
+{% endblock %}
+
+{% block content %}
+    <!-- Pass device configuration from Django to JavaScript -->
+    <script type="text/javascript">
+        window.INDICATOR_CONFIG = {
+            mqtt: {
+                hostname: window.location.hostname,
+                websocketsPort: 50002
+            },
+            topics: {
+                vehicleState: "rov/vehicleState",
+                arm: "rov/arm",
+                flooding: "rov/flooding",
+            }
+        };
+    </script>
+    <div id="app"
+         x-cloak
+         x-data="indicatorController()"
+         x-init="connect()">
+        <table>
+            <tr>
+                <td><span x-text="armed_text"></span></td>
+                <td><div class="indicator-circle" :style="{ 'background-color': indicator_color(armed) }"></div></td>
+            </tr>
+            <tr>
+                <td><span x-text="pi_text"></span></td>
+                <td><div class="indicator-circle" :style="{ 'background-color': indicator_color(pi_connected) }"></div></td>
+            </tr>
+            <tr>
+                <td><span x-text="ardusub_text"></span></td>
+                <td><div class="indicator-circle" :style="{ 'background-color': indicator_color(ardusub_connected) }"></div></td>
+            </tr>
+            <tr>
+                <td><span x-text="flooding_text"></span></td>
+                <td><div class="indicator-circle" :style="{ 'background-color': indicator_color(!flooding) }"></div></td>
+            </tr>
+        </table>
+        {% if user.is_superuser %}
+            <button id="arm-btn" @click="sendArm(true)">Arm</button>
+            <button id="disarm-btn" @click="sendArm(false)">Disarm</button>
+        {% endif %}
+    </div>
+
+    <!-- Load the indicator controller module -->
+    <script type="module" src="{% static 'web_indicator/js/indicator-controller.js' %}"></script>
+
+    <!-- Alpine.js - loaded last with defer to ensure DOM is ready -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+
+{% endblock %}
