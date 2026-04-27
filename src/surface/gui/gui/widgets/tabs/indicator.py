@@ -170,10 +170,10 @@ class IndicatorTab(QWidget):
         flooding_not_detected_button.setText('Flooding Not Detected')
         flooding_not_detected_button.clicked.connect(self.publish_flooding_not_detected)
 
-        simulation_layout.addWidget(self.flooding_label, 2, 1)
-        simulation_layout.addWidget(self.flooding_indicator, 2, 2)
-        simulation_layout.addWidget(flooding_not_detected_button, 2, 3)
-        simulation_layout.addWidget(flooding_detected_button, 2, 4)
+        simulation_layout.addWidget(self.flooding_label, 3, 1)
+        simulation_layout.addWidget(self.flooding_indicator, 3, 2)
+        simulation_layout.addWidget(flooding_not_detected_button, 3, 3)
+        simulation_layout.addWidget(flooding_detected_button, 3, 4)
 
         simulation_layout.setColumnStretch(1, 1)
         simulation_layout.setColumnStretch(2, 1)
