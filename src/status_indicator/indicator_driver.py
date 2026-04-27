@@ -1,4 +1,3 @@
-import colorsys
 import warnings
 
 # Allow debugging on systems without pigpio
@@ -7,8 +6,7 @@ has_pigpio: bool = True
 try:
     import pigpio
 except ImportError:
-    warnings.warn("Could not find pigpio library; " +
-                  "mocking LampDriver for testing", ImportWarning)
+    warnings.warn('Could not find pigpio library; mocking LampDriver for testing', ImportWarning)
     has_pigpio = False
 
 PWM_FREQUENCY = 1000
@@ -23,7 +21,8 @@ CHANNEL_PINS = [RED_GPIO, GREEN_GPIO, BLUE_GPIO]
 class LampDriver:
     def __init__(self) -> None:
         """Create a LampDriver and set up pigpio.
-        Silently skips setup if pigpio is not found."""
+        Silently skips setup if pigpio is not found.
+        """
         if not has_pigpio:
             return
 
@@ -38,12 +37,11 @@ class LampDriver:
             self.pi.set_PWM_dutycycle(pin, 0)
 
     def set_lamp_armed(self) -> None:
-       
         if not has_pigpio or not self.pi.connected:
             warnings.warn(RuntimeWarning)
             return
-        rgb = [0,0,0]
-        full_brightness_rgb = [0,255,0]
+        rgb = [0, 0, 0]
+        full_brightness_rgb = [0, 255, 0]
         for c, channel in enumerate(full_brightness_rgb):
             rgb[c] = channel
 
@@ -51,12 +49,11 @@ class LampDriver:
             self.pi.set_PWM_dutycycle(pin, rgb[c] * PWM_RANGE)
 
     def set_lamp_disarmed(self) -> None:
-       
         if not has_pigpio or not self.pi.connected:
             warnings.warn(RuntimeWarning)
             return
-        rgb = [0,0,0]
-        full_brightness_rgb = [255,0,0]
+        rgb = [0, 0, 0]
+        full_brightness_rgb = [255, 0, 0]
         for c, channel in enumerate(full_brightness_rgb):
             rgb[c] = channel
 
