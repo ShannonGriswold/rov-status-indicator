@@ -23,6 +23,7 @@ class IndicatorApp(App):
     pi_text = StringProperty("Pi Disconnected")
     flooding_text = StringProperty("No Water Detected")
     armed = BooleanProperty(False)
+    flooding = BooleanProperty(False)
     pi_connected = BooleanProperty(False)
     ardusub_connected = BooleanProperty(False)
 
