@@ -16,13 +16,14 @@ from rclpy.qos import qos_profile_system_default
 from gui.gui_node import GUINode
 from gui.styles.custom_styles import WidgetState
 from gui.widgets.circle import CircleIndicator
-from rov_msgs.msg import StatusIPAddress, VehicleState, Flooding
+from rov_msgs.msg import Flooding, StatusIPAddress, VehicleState
 
 TOPIC_CHANGE_VEHICLE_STATE = '/indicator/changeVehicleState'
 TOPIC_VEHICLE_STATE = '/indicator/vehicleState'
 TOPIC_ADD_STATUS_INDICATOR = 'addStatusIndicator'
 TOPIC_CHANGE_FLOODING = '/indicator/changeFlooding'
 TOPIC_FLOODING = '/indicator/flooding'
+
 
 class IndicatorTab(QWidget):
     signal = pyqtSignal(VehicleState)
@@ -38,11 +39,15 @@ class IndicatorTab(QWidget):
         self.flooding_signal.connect(self.refresh_flooding)
 
         GUINode().create_signal_subscription(VehicleState, TOPIC_VEHICLE_STATE, self.signal)
-        self.vehicle_state_publisher = GUINode().create_publisher(VehicleState, TOPIC_CHANGE_VEHICLE_STATE,
-                                                    qos_profile_system_default)
-        self.ip_publisher = GUINode().create_publisher(StatusIPAddress, TOPIC_ADD_STATUS_INDICATOR,
-                                                      qos_profile_system_default)
-        self.flooding_publisher = GUINode().create_publisher(Flooding, TOPIC_CHANGE_FLOODING, qos_profile_system_default)
+        self.vehicle_state_publisher = GUINode().create_publisher(
+            VehicleState, TOPIC_CHANGE_VEHICLE_STATE, qos_profile_system_default
+        )
+        self.ip_publisher = GUINode().create_publisher(
+            StatusIPAddress, TOPIC_ADD_STATUS_INDICATOR, qos_profile_system_default
+        )
+        self.flooding_publisher = GUINode().create_publisher(
+            Flooding, TOPIC_CHANGE_FLOODING, qos_profile_system_default
+        )
 
         GUINode().create_signal_subscription(Flooding, TOPIC_FLOODING, self.flooding_signal)
 
@@ -51,7 +56,6 @@ class IndicatorTab(QWidget):
         root_layout.addWidget(self.create_simulation_group())
         root_layout.addStretch()
         self.setLayout(root_layout)
-
 
     def create_indicator_group(self) -> QGroupBox:
         indicator_group = QGroupBox('Status Indicators')
@@ -185,38 +189,36 @@ class IndicatorTab(QWidget):
 
         return simulation_group
 
-
     def publish_arm(self) -> None:
-        payload = VehicleState(pi_connected = self.pi, ardusub_connected = self.ardusub, armed = True)
+        payload = VehicleState(pi_connected=self.pi, ardusub_connected=self.ardusub, armed=True)
         print(payload)
         self.vehicle_state_publisher.publish(payload)
-        print("seeing if it published")
-
+        print('seeing if it published')
 
     def publish_disarm(self) -> None:
-        payload = VehicleState(pi_connected = self.pi, ardusub_connected = self.ardusub, armed = False)
+        payload = VehicleState(pi_connected=self.pi, ardusub_connected=self.ardusub, armed=False)
         print(payload)
         self.vehicle_state_publisher.publish(payload)
 
     def publish_pi_connected(self) -> None:
-        payload = VehicleState(pi_connected = True, ardusub_connected = self.ardusub, armed = self.armed)
+        payload = VehicleState(pi_connected=True, ardusub_connected=self.ardusub, armed=self.armed)
         print(payload)
         self.vehicle_state_publisher.publish(payload)
-        print("seeing if it published")
+        print('seeing if it published')
 
     def publish_pi_disconnected(self) -> None:
-        payload = VehicleState(pi_connected = False, ardusub_connected = self.ardusub, armed = self.armed)
+        payload = VehicleState(pi_connected=False, ardusub_connected=self.ardusub, armed=self.armed)
         print(payload)
         self.vehicle_state_publisher.publish(payload)
 
     def publish_ardusub_connected(self) -> None:
-        payload = VehicleState(pi_connected = self.pi, ardusub_connected = True, armed = self.armed)
+        payload = VehicleState(pi_connected=self.pi, ardusub_connected=True, armed=self.armed)
         print(payload)
         self.vehicle_state_publisher.publish(payload)
-        print("seeing if it published")
+        print('seeing if it published')
 
     def publish_ardusub_disconnected(self) -> None:
-        payload = VehicleState(pi_connected = self.pi, ardusub_connected = False, armed = self.armed)
+        payload = VehicleState(pi_connected=self.pi, ardusub_connected=False, armed=self.armed)
         print(payload)
         self.vehicle_state_publisher.publish(payload)
 
@@ -224,7 +226,7 @@ class IndicatorTab(QWidget):
         payload = Flooding(flooding=True)
         print(payload)
         self.flooding_publisher.publish(payload)
-        print("seeing if it published")
+        print('seeing if it published')
 
     def publish_flooding_not_detected(self) -> None:
         payload = Flooding(flooding=False)
@@ -235,7 +237,7 @@ class IndicatorTab(QWidget):
         ip_input = self.input.text()
         try:
             port_number = int(self.port_input.text())
-            payload = StatusIPAddress(ip_address = ip_input, port = port_number)
+            payload = StatusIPAddress(ip_address=ip_input, port=port_number)
             self.ip_publisher.publish(payload)
             ip_item = QListWidgetItem(f'IP Address: {ip_input} \tPort: {port_number}')
             self.listWidget.addItem(ip_item)
@@ -244,7 +246,6 @@ class IndicatorTab(QWidget):
 
     @pyqtSlot(VehicleState)
     def refresh(self, msg: VehicleState) -> None:
-            
         if msg.pi_connected:
             self.pi = True
             self.pi_label.setText('Pi connected')
@@ -261,7 +262,7 @@ class IndicatorTab(QWidget):
             self.ardusub = False
             self.ardusub_label.setText('Ardusub disconnected')
             self.ardusub_indicator.set_state(WidgetState.OFF)
-            
+
         if msg.armed:
             self.armed = True
             self.armed_label.setText('Armed')
@@ -270,14 +271,11 @@ class IndicatorTab(QWidget):
             self.armed = False
             self.armed_label.setText('Disarmed')
             self.arm_indicator.set_state(WidgetState.OFF)
-       
-    def refresh_flooding(self, msg:Flooding) -> None:
+
+    def refresh_flooding(self, msg: Flooding) -> None:
         if msg.flooding:
             self.flooding_label.setText('Water Detected')
             self.flooding_indicator.set_state(WidgetState.OFF)
         else:
             self.flooding_label.setText('No water detected')
             self.flooding_indicator.set_state(WidgetState.ON)
-
-
-

@@ -11,4 +11,6 @@ while True:
 
     armed = bool(msg.payload[6])
 
-    print(f'{msg.topic} Pi Connected: {pi_connected} Ardusub Connected {ardusub_connected} Armed {armed}')
+    print(
+        f'{msg.topic} Pi Connected: {pi_connected} Ardusub Connected {ardusub_connected} Armed {armed}'
+    )
