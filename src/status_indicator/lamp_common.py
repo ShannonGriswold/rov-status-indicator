@@ -5,6 +5,7 @@ DEVICE_ID_FILENAME = '/sys/class/net/eth0/address'
 # MQTT Topic Names
 TOPIC_VEHICLE_STATE: str = "rov/vehicleState"
 TOPIC_ARM: str = "rov/arm"
+TOPIC_FLOODING_STATE: str = "rov/flooding"
 
 def get_device_id() -> str:
     mac_addr = open(DEVICE_ID_FILENAME).read().strip()

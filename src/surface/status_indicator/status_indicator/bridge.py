@@ -11,7 +11,7 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 from std_msgs.msg import Bool
 
-from rov_msgs.msg import StatusIPAddress, VehicleState
+from rov_msgs.msg import StatusIPAddress, VehicleState, Flooding
 from rov_msgs.srv import VehicleArming
 
 SIMULATION_ROS_TOPICS = {
@@ -49,7 +49,12 @@ class BridgeNode(Node):
         logging.basicConfig(level=logging.DEBUG)
 
         self.vehicle_state_subscriber = self.create_subscription(VehicleState,
-                self.topics['vehicleState'], self.on_message_publish_state, qos_profile_system_default)
+                self.topics['vehicleState'], self.on_message_publish_state,
+                qos_profile_system_default)
+
+        self.flooding_subscriber = self.create_subscription(Flooding,
+                self.topics['flooding'], self.on_message_publish_flooding,
+                qos_profile_system_default)
 
         self.arm_publisher = self.create_publisher(Bool, self.topics['arm'], qos_profile_system_default)
         self.arm_client = self.create_client(VehicleArming, 'arming')
@@ -110,6 +115,16 @@ class BridgeNode(Node):
 
         for remote_client in self.remote_clients:
             remote_client.publish(MQTT_TOPIC_VEHICLE_STATE, payload, qos=1, retain=True)
+
+    def on_message_publish_flooding(self, message: Flooding) -> None:
+        flooding = {
+            'flooding': message.flooding,
+        }
+
+        payload = json.dumps(flooding).encode('utf-8')
+
+        for remote_client in self.remote_clients:
+            remote_client.publish(MQTT_TOPIC_FLOODING, payload, qos=1, retain=True)
 
     def on_message_recieve_arm(self, _client: mqtt.Client, _userdata: Any,
                                msg: mqtt.MQTTMessage) -> None:

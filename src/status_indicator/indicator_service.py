@@ -67,6 +67,8 @@ class LampService:
         client.on_connect = self.on_connect
         client.message_callback_add(TOPIC_VEHICLE_STATE,
                                     self.on_message_vehicle_state)
+        client.message_callback_add(TOPIC_FLOODING_STATE,
+                                    self.on_message_FLOODING_state)
         client.on_message = self.default_on_message
         logging.basicConfig(level = logging.DEBUG)
         return client
@@ -99,6 +101,7 @@ class LampService:
                    properties: Optional[mqtt.Properties]) -> None:
         print(f"Connected with reason code: {reason_code}")
         self._client.subscribe(TOPIC_VEHICLE_STATE, qos=1)
+        self._client.subscribe(TOPIC_FLOODING_STATE, qos=1)
 
     def default_on_message(self, client: mqtt.Client, userdata: Any,
                            msg: mqtt.MQTTMessage) -> None:
@@ -113,6 +116,16 @@ class LampService:
             self.pi = new_config['pi_connected']
             self.ardusub = new_config['ardusub_connected']
             self.write_current_settings_to_hardware()
+        except InvalidLampConfig:
+            print("error applying new settings " + str(msg.payload))
+
+    
+    def on_message_flooding_state(self, client: mqtt.Client, userdata: Any,
+                              msg: mqtt.MQTTMessage) -> None:
+        try:
+            new_config = json.loads(msg.payload.decode('utf-8'))
+            self.flooding = new_config['flooding']
+      
         except InvalidLampConfig:
             print("error applying new settings " + str(msg.payload))
 

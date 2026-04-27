@@ -45,6 +45,9 @@ class IndicatorApp(App):
         self.mqtt.message_callback_add(TOPIC_VEHICLE_STATE,
                                        self.receive_vehicle_state)
         self.mqtt.subscribe(TOPIC_VEHICLE_STATE, qos=1)
+        self.mqtt.message_callback_add(TOPIC_FLOODING_STATE,
+                                       self.receive_flooding_state)
+        self.mqtt.subscribe(TOPIC_FLOODING_STATE, qos=1)
 
     def receive_vehicle_state(self, client: Client, userdata: Any,
                               message: mqtt.MQTTMessage) -> None:
@@ -53,6 +56,14 @@ class IndicatorApp(App):
             Clock.schedule_once(lambda dt: self._update_ui(new_state), 0.01)
         except Exception:
             print('Invalid vehicle state')
+    def receive_flooding_state(self, client: Client, userdata: Any,
+                              message: mqtt.MQTTMessage) -> None:
+        try:
+            new_state = json.loads(message.payload.decode('utf-8'))
+            Clock.schedule_once(lambda dt: self._update_ui_flooding(new_state), 0.01)
+        except Exception:
+            print('Invalid flooding state')
+    
 
     def send_arm(self) -> None:
         state = {
@@ -67,6 +78,14 @@ class IndicatorApp(App):
         }
         message = json.dumps(state).encode('utf-8')
         self.mqtt.publish(TOPIC_ARM, message, qos=1)
+
+    def _update_ui_flooding(self, new_state: dict[str, Any]) -> None:
+        self.flooding = new_state['flooding']
+        if new_state['flooding']:
+            self.flooding_text = 'Water Detected'
+        else:
+            self.flooding_text = 'No Water Detected'
+
 
     def _update_ui(self, new_state: dict[str, Any]) -> None:
         self.armed = new_state['armed']
