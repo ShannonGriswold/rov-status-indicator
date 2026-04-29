@@ -14,7 +14,7 @@ setup(
         (
             str(Path('share') / PACKAGE_NAME / 'launch'),
             [str(path) for path in Path('launch').glob('*launch.[pxy][yma]*')],
-        )
+        ),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -24,7 +24,9 @@ setup(
     license='Apache License 2.0',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': ['status_indicator = status_indicator.status_indicator:main',
-                            'bridge = status_indicator.bridge:main'],
+        'console_scripts': [
+            'status_indicator = status_indicator.status_indicator:main',
+            'bridge = status_indicator.bridge:main',
+        ],
     },
 )

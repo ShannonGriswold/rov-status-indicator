@@ -1,0 +1,130 @@
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #1A1A1A;
+}
+
+body, a, h2, h1, label, p {
+    color: white;
+}
+
+h1 {
+    text-align: center;
+}
+
+table {
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+    font-size: 1.2em;
+}
+
+.errorlist {
+    color: red;
+}
+
+.page-wrapper {
+    width: 50%;
+    margin: auto;
+    min-height: 100vh;
+    gap: 10px;
+}
+
+.indicator-circle {
+    width: 1em;
+    height: 1em;
+    border-radius: 0.5em;
+}
+
+#arm-btn {
+    background-color: lime;
+    font-size: 1.2em;
+    width: 5em;
+}
+
+#disarm-btn {
+    background-color: #d80d0d;
+    font-size: 1.2em;
+    width: 5em;
+}
+
+td:first-child {
+    width: 15em;
+}
+
+/* Navigation links */
+#nav-links {
+    text-align: center;
+}
+
+#nav-links form {
+    display: inline;
+}
+
+.btn {
+    display: inline-block;
+    padding: 6px 12px;
+    margin-bottom: 0;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    background-image: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.btn-default {
+    color: #333;
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+.btn-default:active,
+.btn-default.active {
+  background-color: #ffffff;
+}
+
+.btn-default:hover {
+  background-color: #ebebeb;
+}
+
+.btn-link {
+    border: none;
+    outline: none;
+    background: none;
+    cursor: pointer;
+    color: white;
+    padding: 0;
+    text-decoration: underline;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+/* Alpine.js app container */
+#app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+@media only all and (max-width: 768px) {
+    .page-wrapper {
+        width: 100%;
+    }
+
+    h1, #nav-links, #outer-pane {
+        margin-left: 1em;
+        margin-right: 1em;
+    }
+}

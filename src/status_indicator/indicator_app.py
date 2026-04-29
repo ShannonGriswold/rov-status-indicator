@@ -1,10 +1,14 @@
 import json
+from typing import Any
+
+import lampi_util
+import paho.mqtt.client as mqtt
 from kivy.app import App
 
 from kivy.clock import Clock
 import pigpio
 from typing import Any, Optional
-from kivy.properties import NumericProperty, AliasProperty, BooleanProperty, StringProperty
+from kivy.properties import BooleanProperty, StringProperty
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 import paho.mqtt.client as mqtt
@@ -17,12 +21,11 @@ from kivy.graphics import Color
 MQTT_CLIENT_ID = "lampi_ui"
 
 class IndicatorApp(App):
-
     gpio17_pressed = BooleanProperty(False)
-    arm_text = StringProperty("Disarmed")
-    ardusub_text = StringProperty("Ardusub Disconnected")
-    pi_text = StringProperty("Pi Disconnected")
-    flooding_text = StringProperty("No Water Detected")
+    arm_text = StringProperty('Disarmed')
+    ardusub_text = StringProperty('Ardusub Disconnected')
+    pi_text = StringProperty('Pi Disconnected')
+    flooding_text = StringProperty('No Water Detected')
     armed = BooleanProperty(False)
     flooding = BooleanProperty(False)
     pi_connected = BooleanProperty(False)
@@ -30,54 +33,55 @@ class IndicatorApp(App):
 
     def on_start(self) -> None:
         self.mqtt: Client = Client(
-            callback_api_version=CallbackAPIVersion.VERSION2,
-            client_id=MQTT_CLIENT_ID
+            callback_api_version=CallbackAPIVersion.VERSION2, client_id=MQTT_CLIENT_ID
         )
         self.mqtt.enable_logger()
         self.mqtt.on_connect = self.on_connect
 
-        self.mqtt.connect(MQTT_BROKER_HOST, port=MQTT_BROKER_PORT,
-                          keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
+        self.mqtt.connect(
+            MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS
+        )
         self.mqtt.loop_start()
         self.set_up_gpio_and_network_status_popup()
 
-    def on_connect(self, client: Client, userdata: Any,
-                   flags: mqtt.ConnectFlags, reason_code: mqtt.ReasonCode,
-                   properties: Optional[mqtt.Properties]) -> None:
-        self.mqtt.message_callback_add(TOPIC_VEHICLE_STATE,
-                                       self.receive_vehicle_state)
+    def on_connect(
+        self,
+        client: Client,
+        userdata: Any,
+        flags: mqtt.ConnectFlags,
+        reason_code: mqtt.ReasonCode,
+        properties: mqtt.Properties | None,
+    ) -> None:
+        self.mqtt.message_callback_add(TOPIC_VEHICLE_STATE, self.receive_vehicle_state)
         self.mqtt.subscribe(TOPIC_VEHICLE_STATE, qos=1)
-        self.mqtt.message_callback_add(TOPIC_FLOODING_STATE,
-                                       self.receive_flooding_state)
+        self.mqtt.message_callback_add(TOPIC_FLOODING_STATE, self.receive_flooding_state)
         self.mqtt.subscribe(TOPIC_FLOODING_STATE, qos=1)
 
-    def receive_vehicle_state(self, client: Client, userdata: Any,
-                              message: mqtt.MQTTMessage) -> None:
+    def receive_vehicle_state(
+        self, client: Client, userdata: Any, message: mqtt.MQTTMessage
+    ) -> None:
         try:
             new_state = json.loads(message.payload.decode('utf-8'))
             Clock.schedule_once(lambda dt: self._update_ui(new_state), 0.01)
         except Exception:
             print('Invalid vehicle state')
-    def receive_flooding_state(self, client: Client, userdata: Any,
-                              message: mqtt.MQTTMessage) -> None:
+
+    def receive_flooding_state(
+        self, client: Client, userdata: Any, message: mqtt.MQTTMessage
+    ) -> None:
         try:
             new_state = json.loads(message.payload.decode('utf-8'))
             Clock.schedule_once(lambda dt: self._update_ui_flooding(new_state), 0.01)
         except Exception:
             print('Invalid flooding state')
 
-
     def send_arm(self) -> None:
-        state = {
-            'armed': True
-        }
+        state = {'armed': True}
         message = json.dumps(state).encode('utf-8')
         self.mqtt.publish(TOPIC_ARM, message, qos=1)
 
     def send_disarm(self) -> None:
-        state = {
-            'armed': False
-        }
+        state = {'armed': False}
         message = json.dumps(state).encode('utf-8')
         self.mqtt.publish(TOPIC_ARM, message, qos=1)
 
@@ -90,7 +94,6 @@ class IndicatorApp(App):
         else:
             self.flooding_text = 'No Water Detected'
             self.flooding_popup.dismiss()
-
 
     def _update_ui(self, new_state: dict[str, Any]) -> None:
         self.armed = new_state['armed']
@@ -111,7 +114,8 @@ class IndicatorApp(App):
 
     def set_up_gpio_and_network_status_popup(self) -> None:
         """Set up a popup to display the Lampi's IP
-        address when a button is pressed."""
+        address when a button is pressed.
+        """
         self.pi: pigpio.pi = pigpio.pi()
         self.pi.set_mode(17, pigpio.INPUT)
         self.pi.set_pull_up_down(17, pigpio.PUD_UP)
@@ -124,6 +128,7 @@ class IndicatorApp(App):
         return Popup(title='Network Status',
                      content=Label(text='IP ADDRESS WILL GO HERE'),
                      size_hint=(1, 1), auto_dismiss=False)
+
     def _build_flooding_popup(self) -> Popup:
         layout = GridLayout(cols = 1, padding = 10)
 
@@ -136,7 +141,7 @@ class IndicatorApp(App):
         # Instantiate the modal popup and display
         popup = Popup(title ='Flooding Status',
                       content = layout,
-                      size_hint =(1, 1), auto_dismiss=False)  
+                      size_hint =(1, 1), auto_dismiss=False)
         # Attach close button press with popup.dismiss action
         closeButton.bind(on_press = self.press_button)
         return popup
@@ -148,13 +153,12 @@ class IndicatorApp(App):
         print(f"publishing flass flood message: {message}")
         self.mqtt.publish(TOPIC_FLASH_FLOOD, message, qos=1)
 
-
     def update_popup_ip_address(self, instance: Popup) -> None:
         """Update the popup with the current IP address"""
-        interface = "wlan0"
+        interface = 'wlan0'
         ipaddr = lampi_util.get_ip_address(interface)
         deviceid = lampi_util.get_device_id()
-        msg = f"{interface}: {ipaddr}\nDeviceID: {deviceid}"
+        msg = f'{interface}: {ipaddr}\nDeviceID: {deviceid}'
         instance.content.text = msg
 
     def update_popUp_flooding(self, instance: Popup) -> None:

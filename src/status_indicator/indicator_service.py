@@ -2,12 +2,12 @@
 import time
 import threading
 import json
-import pigpio
-import paho.mqtt.client as mqtt
-import shelve
-import colorsys
-from typing import Any, Optional
 import logging
+import time
+from typing import Any
+
+import paho.mqtt.client as mqtt
+import pigpio
 from lamp_common import *
 
 PIN_R: int = 19
@@ -17,9 +17,9 @@ PINS: list[int] = [PIN_R, PIN_G, PIN_B]
 PWM_RANGE: int = 1000
 PWM_FREQUENCY: int = 1000
 
-LAMP_STATE_FILENAME: str = "lamp_state"
+LAMP_STATE_FILENAME: str = 'lamp_state'
 
-MQTT_CLIENT_ID: str = "indicator_service"
+MQTT_CLIENT_ID: str = 'indicator_service'
 
 FP_DIGITS: int = 2
 
@@ -31,7 +31,6 @@ class InvalidLampConfig(Exception):
 
 
 class LampDriver:
-
     def __init__(self) -> None:
         self._gpio: pigpio.pi = pigpio.pi()
         for color_pin in PINS:
@@ -63,36 +62,36 @@ class LampService:
         client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
             client_id=MQTT_CLIENT_ID,
-            protocol=MQTT_VERSION
+            protocol=MQTT_VERSION,
         )
-        client.will_set(client_state_topic(MQTT_CLIENT_ID), "0",
-                        qos=2, retain=True)
+        client.will_set(client_state_topic(MQTT_CLIENT_ID), '0', qos=2, retain=True)
         client.enable_logger()
         client.on_connect = self.on_connect
+
         client.message_callback_add(TOPIC_VEHICLE_STATE,
                                     self.on_message_vehicle_state)
         client.message_callback_add(TOPIC_FLOODING_STATE,
                                     self.on_message_flooding_state)
         client.message_callback_add(TOPIC_FLASH_FLOOD, self.on_message_flash_flood)
+
         client.on_message = self.default_on_message
-        logging.basicConfig(level = logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG)
         return client
 
     def serve(self) -> None:
         start_time = time.time()
         while True:
             try:
-                self._client.connect(MQTT_BROKER_HOST,
-                                     port=MQTT_BROKER_PORT,
-                                     keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
-                print("Connected to broker")
+                self._client.connect(
+                    MQTT_BROKER_HOST, port=MQTT_BROKER_PORT, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS
+                )
+                print('Connected to broker')
                 break
             except ConnectionRefusedError as e:
                 current_time = time.time()
                 delay = current_time - start_time
                 if (delay) < MAX_STARTUP_WAIT_SECS:
-                    print("Error connecting to broker; delaying and "
-                          "will retry; delay={:.0f}".format(delay))
+                    print(f'Error connecting to broker; delaying and will retry; delay={delay:.0f}')
                     time.sleep(1)
                 else:
                     raise e
@@ -101,21 +100,31 @@ class LampService:
         except Exception as e:
             print(e)
 
-    def on_connect(self, client: mqtt.Client, userdata: Any,
-                   flags: mqtt.ConnectFlags, reason_code: mqtt.ReasonCode,
-                   properties: Optional[mqtt.Properties]) -> None:
-        print(f"Connected with reason code: {reason_code}")
+    def on_connect(
+        self,
+        client: mqtt.Client,
+        userdata: Any,
+        flags: mqtt.ConnectFlags,
+        reason_code: mqtt.ReasonCode,
+        properties: mqtt.Properties | None,
+    ) -> None:
+        print(f'Connected with reason code: {reason_code}')
         self._client.subscribe(TOPIC_VEHICLE_STATE, qos=1)
         self._client.subscribe(TOPIC_FLOODING_STATE, qos=1)
         self._client.subscribe(TOPIC_FLASH_FLOOD, qos=1)
 
-    def default_on_message(self, client: mqtt.Client, userdata: Any,
-                           msg: mqtt.MQTTMessage) -> None:
-        print("Received unexpected message on topic " +
-              msg.topic + " with payload '" + str(msg.payload) + "'")
+    def default_on_message(self, client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> None:
+        print(
+            'Received unexpected message on topic '
+            + msg.topic
+            + " with payload '"
+            + str(msg.payload)
+            + "'"
+        )
 
-    def on_message_vehicle_state(self, client: mqtt.Client, userdata: Any,
-                              msg: mqtt.MQTTMessage) -> None:
+    def on_message_vehicle_state(
+        self, client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage
+    ) -> None:
         try:
             new_config = json.loads(msg.payload.decode('utf-8'))
             self.armed = new_config['armed']
@@ -123,8 +132,7 @@ class LampService:
             self.ardusub = new_config['ardusub_connected']
             self.write_current_settings_to_hardware()
         except InvalidLampConfig:
-            print("error applying new settings " + str(msg.payload))
-
+            print('error applying new settings ' + str(msg.payload))
 
     def on_message_flooding_state(self, client: mqtt.Client, userdata: Any,
                               msg: mqtt.MQTTMessage) -> None:
@@ -145,14 +153,14 @@ class LampService:
                 self.write_current_settings_to_hardware()
 
         except InvalidLampConfig:
-            print("error applying new settings " + str(msg.payload))
+            print('error applying new settings ' + str(msg.payload))
 
     def get_current_armed(self) -> bool:
         return self.armed
 
     def set_current_armed(self, new_armed: bool) -> None:
         if new_armed not in [True, False]:
-            raise InvalidLampConfig()
+            raise InvalidLampConfig
         self.write_current_settings_to_hardware()
 
     def write_current_settings_to_hardware(self) -> None:
