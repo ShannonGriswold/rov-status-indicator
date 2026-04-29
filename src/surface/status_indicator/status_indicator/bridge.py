@@ -76,7 +76,7 @@ class BridgeNode(Node):
     def remote_on_connect(
         self,
         client: mqtt.Client,
-        _userdata: Any,
+        _userdata: Any,  # noqa: ANN401
         _flags: mqtt.ConnectFlags,
         reason_code: paho.mqtt.reasoncodes.ReasonCode,
         _properties: paho.mqtt.properties.Properties | None,
@@ -107,7 +107,7 @@ class BridgeNode(Node):
     def remote_on_disconnect(
         self,
         client: mqtt.Client,
-        _userdata: Any,
+        _userdata: Any,  # noqa: ANN401
         _disconnect_flags: mqtt.DisconnectFlags,
         reason_code: paho.mqtt.reasoncodes.ReasonCode,
         _properties: paho.mqtt.properties.Properties | None,
@@ -116,7 +116,7 @@ class BridgeNode(Node):
         client.reconnect()
 
     def default_on_message(
-        self, _client: mqtt.Client, _userdata: Any, msg: mqtt.MQTTMessage
+        self, _client: mqtt.Client, _userdata: Any, msg: mqtt.MQTTMessage  # noqa: ANN401
     ) -> None:
         self.get_logger().warning(
             'Received unexpected message on topic '
@@ -136,7 +136,7 @@ class BridgeNode(Node):
         payload = json.dumps(state).encode('utf-8')
 
         for remote_client in self.remote_clients:
-            remote_client.publish(MQTT_TOPIC_VEHICLE_STATE, payload, qos=1, retain=True)
+            remote_client.publish(MQTT_TOPIC_VEHICLE_STATE, payload, qos=1)
 
     def on_message_publish_flooding(self, message: Flooding) -> None:
         flooding = {
@@ -146,16 +146,16 @@ class BridgeNode(Node):
         payload = json.dumps(flooding).encode('utf-8')
 
         for remote_client in self.remote_clients:
-            remote_client.publish(MQTT_TOPIC_FLOODING, payload, qos=1, retain=True)
+            remote_client.publish(MQTT_TOPIC_FLOODING, payload, qos=1)
 
     def on_message_recieve_arm(
-        self, _client: mqtt.Client, _userdata: Any, msg: mqtt.MQTTMessage
+        self, _client: mqtt.Client, _userdata: Any, msg: mqtt.MQTTMessage  # noqa: ANN401
     ) -> None:
         message_value = None
         try:
             message = json.loads(msg.payload.decode('utf-8'))
             message_value = message['armed']
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.get_logger().error('Invalid arm message')
         if message_value is not None:
             if self.simulation_param:
