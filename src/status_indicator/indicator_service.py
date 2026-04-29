@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import time
+import threading
 import json
 import pigpio
 import paho.mqtt.client as mqtt
@@ -53,6 +54,9 @@ class LampService:
         self.pi = False
         self.ardusub = False
         self.flooding = False
+        self.flash_flood = threading.Event()
+        self.flash_flood.clear()
+        self.flash_flood_thread = None
         self.write_current_settings_to_hardware()
 
     def _create_and_configure_broker_client(self) -> mqtt.Client:
@@ -68,7 +72,8 @@ class LampService:
         client.message_callback_add(TOPIC_VEHICLE_STATE,
                                     self.on_message_vehicle_state)
         client.message_callback_add(TOPIC_FLOODING_STATE,
-                                    self.on_message_FLOODING_state)
+                                    self.on_message_flooding_state)
+        client.message_callback_add(TOPIC_FLASH_FLOOD, self.on_message_flash_flood)
         client.on_message = self.default_on_message
         logging.basicConfig(level = logging.DEBUG)
         return client
@@ -102,6 +107,7 @@ class LampService:
         print(f"Connected with reason code: {reason_code}")
         self._client.subscribe(TOPIC_VEHICLE_STATE, qos=1)
         self._client.subscribe(TOPIC_FLOODING_STATE, qos=1)
+        self._client.subscribe(TOPIC_FLASH_FLOOD, qos=1)
 
     def default_on_message(self, client: mqtt.Client, userdata: Any,
                            msg: mqtt.MQTTMessage) -> None:
@@ -119,13 +125,25 @@ class LampService:
         except InvalidLampConfig:
             print("error applying new settings " + str(msg.payload))
 
-    
+
     def on_message_flooding_state(self, client: mqtt.Client, userdata: Any,
                               msg: mqtt.MQTTMessage) -> None:
         try:
             new_config = json.loads(msg.payload.decode('utf-8'))
             self.flooding = new_config['flooding']
-      
+            self.write_current_settings_to_hardware()
+        except InvalidLampConfig:
+            print("error applying new settings " + str(msg.payload))
+
+    def on_message_flash_flood(self, client: mqtt.Client, userdata: Any,
+                              msg: mqtt.MQTTMessage) -> None:
+        try:
+            new_config = json.loads(msg.payload.decode('utf-8'))
+
+            if not new_config['flash']:
+                self.stop_flashing()
+                self.write_current_settings_to_hardware()
+
         except InvalidLampConfig:
             print("error applying new settings " + str(msg.payload))
 
@@ -141,10 +159,33 @@ class LampService:
         armed = self.armed
         pi = self.pi
         ardusub = self.ardusub
-        if pi:
-            self.lamp_driver.change_color(0, PWM_RANGE, 0)
+        flooding = self.flooding
+        if flooding:
+            self.flash_flood.clear()
+
+            self.flash_flood_thread = threading.Thread(target=self.flash_flooding)
+            self.flash_flood_thread.start()
+
         else:
-            self.lamp_driver.change_color(PWM_RANGE,0,0)
+            self.stop_flashing()
+            if pi:
+                self.lamp_driver.change_color(0, PWM_RANGE, 0)
+            else:
+                self.lamp_driver.change_color(PWM_RANGE,0,0)
+
+    def stop_flashing(self):
+        self.flash_flood.set()
+        self.flooding = False
+        if self.flash_flood_thread:
+            self.flash_flood_thread.join()
+            self.flash_flood_thread = None
+
+    def flash_flooding(self):
+        while not self.flash_flood.is_set():
+            self.lamp_driver.change_color(0, 0, PWM_RANGE)
+            self.flash_flood.wait(timeout=0.5)
+            self.lamp_driver.change_color(0,0,0)
+            self.flash_flood.wait(timeout=0.5)
 
 if __name__ == '__main__':
     LampService().serve()

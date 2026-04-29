@@ -10,9 +10,10 @@ from kivy.uix.label import Label
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import Client, CallbackAPIVersion
 from lamp_common import *
-
+from kivy.uix.gridlayout import *
+from kivy.uix.button import *
 import lampi_util
-
+from kivy.graphics import Color
 MQTT_CLIENT_ID = "lampi_ui"
 
 class IndicatorApp(App):
@@ -64,7 +65,7 @@ class IndicatorApp(App):
             Clock.schedule_once(lambda dt: self._update_ui_flooding(new_state), 0.01)
         except Exception:
             print('Invalid flooding state')
-    
+
 
     def send_arm(self) -> None:
         state = {
@@ -84,8 +85,11 @@ class IndicatorApp(App):
         self.flooding = new_state['flooding']
         if new_state['flooding']:
             self.flooding_text = 'Water Detected'
+            self.flooding_popup.open()
+
         else:
             self.flooding_text = 'No Water Detected'
+            self.flooding_popup.dismiss()
 
 
     def _update_ui(self, new_state: dict[str, Any]) -> None:
@@ -114,11 +118,36 @@ class IndicatorApp(App):
         Clock.schedule_interval(self._poll_gpio, 0.05)
         self.network_status_popup: Popup = self._build_network_status_popup()
         self.network_status_popup.bind(on_open=self.update_popup_ip_address)
+        self.flooding_popup: Popup = self._build_flooding_popup()
 
     def _build_network_status_popup(self) -> Popup:
         return Popup(title='Network Status',
                      content=Label(text='IP ADDRESS WILL GO HERE'),
                      size_hint=(1, 1), auto_dismiss=False)
+    def _build_flooding_popup(self) -> Popup:
+        layout = GridLayout(cols = 1, padding = 10)
+
+        popupLabel = Label(text = "WATER DETECTED!", size_hint_y = 0.75)
+        closeButton = Button(text = "Dismiss", size_hint_y = 0.25, background_normal='', background_color=(1,0,0,1))
+
+        layout.add_widget(popupLabel)
+        layout.add_widget(closeButton)
+
+        # Instantiate the modal popup and display
+        popup = Popup(title ='Flooding Status',
+                      content = layout,
+                      size_hint =(1, 1), auto_dismiss=False)  
+        # Attach close button press with popup.dismiss action
+        closeButton.bind(on_press = self.press_button)
+        return popup
+
+    def press_button(self, instance):
+        self.flooding_popup.dismiss()
+        msg = {'flash': False}
+        message = json.dumps(msg).encode('utf-8')
+        print(f"publishing flass flood message: {message}")
+        self.mqtt.publish(TOPIC_FLASH_FLOOD, message, qos=1)
+
 
     def update_popup_ip_address(self, instance: Popup) -> None:
         """Update the popup with the current IP address"""
@@ -127,6 +156,12 @@ class IndicatorApp(App):
         deviceid = lampi_util.get_device_id()
         msg = f"{interface}: {ipaddr}\nDeviceID: {deviceid}"
         instance.content.text = msg
+
+    def update_popUp_flooding(self, instance: Popup) -> None:
+        msg = "WATER DETECTED!"
+        instance.content.text = msg
+
+
 
     def on_gpio17_pressed(self, instance: Any, value: bool) -> None:
         """Open or close the popup depending on the provided value"""
