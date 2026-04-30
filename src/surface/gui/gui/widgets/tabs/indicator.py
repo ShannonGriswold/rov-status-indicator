@@ -16,7 +16,8 @@ from rclpy.qos import qos_profile_system_default
 from gui.gui_node import GUINode
 from gui.styles.custom_styles import WidgetState
 from gui.widgets.circle import CircleIndicator
-from rov_msgs.msg import Flooding, StatusIPAddress, VehicleState
+from rov_msgs.msg import Flooding, VehicleState
+from rov_msgs.srv import IpStatus
 
 TOPIC_CHANGE_VEHICLE_STATE = '/indicator/changeVehicleState'
 TOPIC_VEHICLE_STATE = '/indicator/vehicleState'
@@ -31,6 +32,7 @@ WEB_PORT = 50001
 class IndicatorTab(QWidget):
     signal = pyqtSignal(VehicleState)
     flooding_signal = pyqtSignal(Flooding)
+    command_response_signal = pyqtSignal(IpStatus.Response)
 
     def __init__(self) -> None:
         super().__init__()
@@ -45,9 +47,7 @@ class IndicatorTab(QWidget):
         self.vehicle_state_publisher = GUINode().create_publisher(
             VehicleState, TOPIC_CHANGE_VEHICLE_STATE, qos_profile_system_default
         )
-        self.ip_publisher = GUINode().create_publisher(
-            StatusIPAddress, TOPIC_ADD_STATUS_INDICATOR, qos_profile_system_default
-        )
+       
         self.flooding_publisher = GUINode().create_publisher(
             Flooding, TOPIC_CHANGE_FLOODING, qos_profile_system_default
         )
@@ -59,10 +59,27 @@ class IndicatorTab(QWidget):
         root_layout.addWidget(self.create_simulation_group())
         root_layout.addStretch()
         self.setLayout(root_layout)
+        
+        self.command_response_signal.connect(self.ip_connection_status)
 
+        self.ip_client = GUINode().create_client_multithreaded(IpStatus, TOPIC_ADD_STATUS_INDICATOR)
+
+        self.ip_client.wait_for_service()
         # Add the ec2 by default on start
         self.add_ip(WEB_HOST, WEB_PORT)
+        
+        
+        
+       
 
+    
+    @pyqtSlot(IpStatus.Response)
+    def arm_status(self, res: IpStatus.Response) -> None:
+        if res.message_sent:
+            return True
+        else:
+            return False
+            
 
     def create_indicator_group(self) -> QGroupBox:
         indicator_group = QGroupBox('Status Indicators')
@@ -198,46 +215,34 @@ class IndicatorTab(QWidget):
 
     def publish_arm(self) -> None:
         payload = VehicleState(pi_connected=self.pi, ardusub_connected=self.ardusub, armed=True)
-        print(payload)
         self.vehicle_state_publisher.publish(payload)
-        print('seeing if it published')
 
     def publish_disarm(self) -> None:
         payload = VehicleState(pi_connected=self.pi, ardusub_connected=self.ardusub, armed=False)
-        print(payload)
         self.vehicle_state_publisher.publish(payload)
 
     def publish_pi_connected(self) -> None:
         payload = VehicleState(pi_connected=True, ardusub_connected=self.ardusub, armed=self.armed)
-        print(payload)
         self.vehicle_state_publisher.publish(payload)
-        print('seeing if it published')
 
     def publish_pi_disconnected(self) -> None:
         payload = VehicleState(pi_connected=False, ardusub_connected=self.ardusub, armed=self.armed)
-        print(payload)
         self.vehicle_state_publisher.publish(payload)
 
     def publish_ardusub_connected(self) -> None:
         payload = VehicleState(pi_connected=self.pi, ardusub_connected=True, armed=self.armed)
-        print(payload)
         self.vehicle_state_publisher.publish(payload)
-        print('seeing if it published')
 
     def publish_ardusub_disconnected(self) -> None:
         payload = VehicleState(pi_connected=self.pi, ardusub_connected=False, armed=self.armed)
-        print(payload)
         self.vehicle_state_publisher.publish(payload)
 
     def publish_flooding_detected(self) -> None:
         payload = Flooding(flooding=True)
-        print(payload)
         self.flooding_publisher.publish(payload)
-        print('seeing if it published')
 
     def publish_flooding_not_detected(self) -> None:
         payload = Flooding(flooding=False)
-        print(payload)
         self.flooding_publisher.publish(payload)
 
     def add_ip_button_callback(self) -> None:
@@ -247,15 +252,18 @@ class IndicatorTab(QWidget):
             self.add_ip(ip_input, port_number)
         except (TypeError, ValueError):
             GUINode().get_logger().error('Invalid port')
+    
+    @pyqtSlot(IpStatus.Response)
+    def ip_connection_status(self, res: IpStatus.Response) -> None:
+        if  res.connected:
+            ip_item = QListWidgetItem(f'IP Address: {res.ip_address} \tPort: {res.port}')
+            self.listWidget.addItem(ip_item)
+            
 
     def add_ip(self, ip:str, port:int) -> None:
-        try:
-            payload = StatusIPAddress(ip_address = ip, port = port)
-            self.ip_publisher.publish(payload)
-            ip_item = QListWidgetItem(f'IP Address: {ip} \tPort: {port}')
-            self.listWidget.addItem(ip_item)
-        except (TypeError, ValueError):
-            GUINode().get_logger().error('Invalid port')
+        GUINode().send_request_multithreaded(
+                self.ip_client, IpStatus.Request(ip_address=ip, port=port), self.command_response_signal
+        )
 
     @pyqtSlot(VehicleState)
     def refresh(self, msg: VehicleState) -> None:

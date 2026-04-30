@@ -1,0 +1,6 @@
+string ip_address
+uint16 port
+---
+bool connected
+string ip_address
+uint16 port
