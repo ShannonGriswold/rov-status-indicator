@@ -11,8 +11,9 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 from std_msgs.msg import Bool
 
-from rov_msgs.msg import Flooding, StatusIPAddress, VehicleState
+from rov_msgs.msg import Flooding, VehicleState
 from rov_msgs.srv import VehicleArming
+from rov_msgs.srv import IpStatus
 
 SIMULATION_ROS_TOPICS = {
     'vehicleState': '/indicator/vehicleState',
@@ -33,6 +34,7 @@ REMOTE_MQTT_CLIENT_ID = 'status_indicator'
 MQTT_VERSION: paho.mqtt.enums.MQTTProtocolVersion = mqtt.MQTTv311
 MQTT_BROKER_KEEP_ALIVE_SECS: int = 60
 MAX_STARTUP_WAIT_SECS: float = 10.0
+
 
 
 class BridgeNode(Node):
@@ -65,14 +67,11 @@ class BridgeNode(Node):
         )
         self.arm_client = self.create_client(VehicleArming, 'arming')
 
-        self.ip_address_subscriber = self.create_subscription(
-            StatusIPAddress,
-            ROS_TOPIC_ADD_STATUS_INDICATOR,
-            self.on_message_add_indicator,
-            qos_profile_system_default,
-        )
-
         self.remote_clients: list[mqtt.Client] = []
+        
+        self.ip_add_service = self.create_service(
+            IpStatus, ROS_TOPIC_ADD_STATUS_INDICATOR, callback=self.ip_add_service_callback
+        )
 
         self.most_recent_vehicle_state = {
             'armed': False,
@@ -104,8 +103,13 @@ class BridgeNode(Node):
         start_time = time.time()
         while True:
             try:
-                remote_client.connect(ip_addr, port=port, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
-                self.get_logger().info('Connected to remote broker')
+                self.get_logger().info('trying to connect to remote broker')
+                try:
+                    remote_client.connect(ip_addr, port=port, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
+                except TimeoutError:
+                    self.get_logger().error("Invalid ip address port pair, try again")
+                    return False
+                    
                 break
             except ConnectionRefusedError:
                 current_time = time.time()
@@ -116,8 +120,41 @@ class BridgeNode(Node):
                     )
                     time.sleep(1)
                 else:
-                    raise
+                    self.get_logger().error("Invalid ip address port pair, try again")
+                    return False
+        self.get_logger().info('Connected to remote broker')
         remote_client.loop_start()
+        return True
+    
+    
+    def ip_add_service_callback(
+        self, request: IpStatus.Request, response: IpStatus.Response
+    ) -> IpStatus.Response:
+        client_id = REMOTE_MQTT_CLIENT_ID + str(len(self.remote_clients))
+        remote_client = mqtt.Client(
+            callback_api_version=paho.mqtt.enums.CallbackAPIVersion.VERSION2,
+            client_id=client_id,
+            protocol=MQTT_VERSION,
+        )
+        remote_client.enable_logger()
+        remote_client.on_connect = self.remote_on_connect
+        remote_client.on_disconnect = self.remote_on_disconnect
+        remote_client.message_callback_add(MQTT_TOPIC_ARM, self.on_message_recieve_arm)
+
+        remote_client.on_message = self.default_on_message
+
+        # self.remote_clients.append(remote_client)
+
+        if self.connect_to_remote(remote_client, request.ip_address, request.port):
+            self.remote_clients.append(remote_client)
+            response.connected = True
+        else:
+            response.connected = False
+        
+        response.ip_address = request.ip_address
+        response.port = request.port
+        return response
+        
 
     def remote_on_disconnect(
         self,
@@ -186,24 +223,9 @@ class BridgeNode(Node):
                 if not response or not response.message_sent:
                     self.get_logger().warning('Failed to arm or disarm')
 
-    def on_message_add_indicator(self, message: StatusIPAddress) -> None:
-        client_id = REMOTE_MQTT_CLIENT_ID + str(len(self.remote_clients))
-        remote_client = mqtt.Client(
-            callback_api_version=paho.mqtt.enums.CallbackAPIVersion.VERSION2,
-            client_id=client_id,
-            protocol=MQTT_VERSION,
-        )
-        remote_client.enable_logger()
-        remote_client.on_connect = self.remote_on_connect
-        remote_client.on_disconnect = self.remote_on_disconnect
-        remote_client.message_callback_add(MQTT_TOPIC_ARM, self.on_message_recieve_arm)
-
-        remote_client.on_message = self.default_on_message
-
-        self.remote_clients.append(remote_client)
-
-        self.connect_to_remote(remote_client, message.ip_address, message.port)
-
+ 
+       
+            
 
 def main() -> None:
     rclpy.init()
