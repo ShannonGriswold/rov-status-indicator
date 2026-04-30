@@ -251,7 +251,7 @@ class IndicatorTab(QWidget):
     def add_ip(self, ip:str, port:int) -> None:
         try:
             payload = StatusIPAddress(ip_address = ip, port = port)
-            self.IPPublisher.publish(payload)
+            self.ip_publisher.publish(payload)
             ip_item = QListWidgetItem(f'IP Address: {ip} \tPort: {port}')
             self.listWidget.addItem(ip_item)
         except (TypeError, ValueError):
