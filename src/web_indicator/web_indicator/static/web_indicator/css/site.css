@@ -37,6 +37,10 @@ table {
     border-radius: 0.5em;
 }
 
+img {
+    height: 1.5em;
+}
+
 #arm-btn {
     background-color: lime;
     font-size: 1.2em;

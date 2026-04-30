@@ -7,6 +7,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
 
+  <link rel ="icon" href="{% static 'web_indicator/images/favicon.ico' %}" type="image/x-icon">
+
   <link rel="stylesheet" type="text/css" href="{% static 'web_indicator/css/site.css' %}"/>
 
   <!-- Hide Alpine.js elements until ready (prevents flash of unstyled content) -->
@@ -18,7 +20,10 @@
 </head>
 <body>
     <div class="page-wrapper">
-        <h1>CWRUbotix MATE ROV Status Indicator</h1>
+        <h1>
+            <img src="{% static 'web_indicator/images/logo.png' %}">
+            CWRUbotix MATE ROV Status Indicator
+        </h1>
         <div id="nav-links">
             <a href="{% url 'web_indicator:index' %}">Home</a>
             {% if user.is_authenticated %}
