@@ -49,6 +49,10 @@ table {
     width: 5em;
 }
 
+#disarm-btn:disabled, #arm-btn:disabled {
+    opacity: 0.6;
+}
+
 td:first-child {
     width: 15em;
 }

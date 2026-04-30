@@ -94,8 +94,10 @@ BoxLayout:
       on_press: app.send_arm()
       background_color: green
       font_size: sp(20)
+      disabled: not app.ardusub_connected
     Button:
       text: "Disarm"
       on_press: app.send_disarm()
       background_color: red
       font_size: sp(20)
+      disabled: not app.ardusub_connected

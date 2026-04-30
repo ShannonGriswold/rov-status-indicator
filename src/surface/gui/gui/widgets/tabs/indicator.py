@@ -132,18 +132,20 @@ class IndicatorTab(QWidget):
         self.arm_indicator = CircleIndicator(radius=10)
         self.arm_indicator.set_state(WidgetState.OFF)
 
-        arm_button = QPushButton()
-        arm_button.setText('ARM')
-        arm_button.clicked.connect(self.publish_arm)
+        self.arm_button = QPushButton()
+        self.arm_button.setText('ARM')
+        self.arm_button.clicked.connect(self.publish_arm)
+        self.arm_button.setDisabled(True)
 
-        disarm_button = QPushButton()
-        disarm_button.setText('DISARM')
-        disarm_button.clicked.connect(self.publish_disarm)
+        self.disarm_button = QPushButton()
+        self.disarm_button.setText('DISARM')
+        self.disarm_button.clicked.connect(self.publish_disarm)
+        self.disarm_button.setDisabled(True)
 
         simulation_layout.addWidget(self.armed_label, 0, 1)
         simulation_layout.addWidget(self.arm_indicator, 0, 2)
-        simulation_layout.addWidget(arm_button, 0, 3)
-        simulation_layout.addWidget(disarm_button, 0, 4)
+        simulation_layout.addWidget(self.arm_button, 0, 3)
+        simulation_layout.addWidget(self.disarm_button, 0, 4)
 
         self.pi_label = QLabel('Pi Disconnected')
         self.pi_indicator = CircleIndicator(radius=10)
@@ -166,18 +168,20 @@ class IndicatorTab(QWidget):
         self.ardusub_indicator = CircleIndicator(radius=10)
         self.ardusub_indicator.set_state(WidgetState.OFF)
 
-        ardusub_connected_button = QPushButton()
-        ardusub_connected_button.setText('Ardusub connected')
-        ardusub_connected_button.clicked.connect(self.publish_ardusub_connected)
+        self.ardusub_connected_button = QPushButton()
+        self.ardusub_connected_button.setText('Ardusub connected')
+        self.ardusub_connected_button.clicked.connect(self.publish_ardusub_connected)
+        self.ardusub_connected_button.setDisabled(True)
 
-        ardusub_disconnected_button = QPushButton()
-        ardusub_disconnected_button.setText('Ardusub disconnected')
-        ardusub_disconnected_button.clicked.connect(self.publish_ardusub_disconnected)
+        self.ardusub_disconnected_button = QPushButton()
+        self.ardusub_disconnected_button.setText('Ardusub disconnected')
+        self.ardusub_disconnected_button.clicked.connect(self.publish_ardusub_disconnected)
+        self.ardusub_disconnected_button.setDisabled(True)
 
         simulation_layout.addWidget(self.ardusub_label, 2, 1)
         simulation_layout.addWidget(self.ardusub_indicator, 2, 2)
-        simulation_layout.addWidget(ardusub_connected_button, 2, 3)
-        simulation_layout.addWidget(ardusub_disconnected_button, 2, 4)
+        simulation_layout.addWidget(self.ardusub_connected_button, 2, 3)
+        simulation_layout.addWidget(self.ardusub_disconnected_button, 2, 4)
 
         self.flooding_label = QLabel('No Water Detected')
         self.flooding_indicator = CircleIndicator(radius=10)
@@ -272,18 +276,26 @@ class IndicatorTab(QWidget):
             self.pi = True
             self.pi_label.setText('Pi connected')
             self.pi_indicator.set_state(WidgetState.ON)
+            self.ardusub_connected_button.setDisabled(False)
+            self.ardusub_disconnected_button.setDisabled(False)
         else:
             self.pi = False
             self.pi_label.setText('Pi disconnected')
             self.pi_indicator.set_state(WidgetState.OFF)
+            self.ardusub_connected_button.setDisabled(True)
+            self.ardusub_disconnected_button.setDisabled(True)
         if msg.ardusub_connected:
             self.ardusub = True
             self.ardusub_label.setText('Ardusub connected')
             self.ardusub_indicator.set_state(WidgetState.ON)
+            self.arm_button.setDisabled(False)
+            self.disarm_button.setDisabled(False)
         else:
             self.ardusub = False
             self.ardusub_label.setText('Ardusub disconnected')
             self.ardusub_indicator.set_state(WidgetState.OFF)
+            self.arm_button.setDisabled(True)
+            self.disarm_button.setDisabled(True)
 
         if msg.armed:
             self.armed = True
