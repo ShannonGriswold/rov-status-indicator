@@ -1,0 +1,21 @@
+[Unit]
+Description=Lampi Gunicorn Django Service
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/home/ubuntu/rov-status-indicator/src/web_indicator
+Environment="PATH=/home/ubuntu/ec2-venv/bin"
+ExecStart=/home/ubuntu/ec2-venv/bin/gunicorn \
+    --bind 127.0.0.1:8000 \
+    --workers 3 \
+    --access-logfile - \
+    --error-logfile - \
+    status_indicator.wsgi:application
+
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
