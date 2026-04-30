@@ -12,6 +12,7 @@ body, a, h2, h1, label, p {
 
 h1 {
     text-align: center;
+    font-size: 3em;
 }
 
 table {
@@ -35,6 +36,10 @@ table {
     width: 1em;
     height: 1em;
     border-radius: 0.5em;
+}
+
+img {
+    height: 0.9em;
 }
 
 #arm-btn {
