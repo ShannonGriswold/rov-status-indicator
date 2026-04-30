@@ -24,6 +24,8 @@ class OperatorApp(App):
 
         self.setWindowTitle('Operator GUI - CWRUbotix ROV 2025')
 
+        status_simulation_param = self.node.declare_parameter('status-simulation', value=False)
+
         # Main tab
         main_tab = QWidget()
         main_layout = QHBoxLayout()
@@ -57,7 +59,7 @@ class OperatorApp(App):
         self.tabs.addTab(GeneralDebugTab(), 'General Debug')
         self.shipwreck_tab = ShipwreckTab()
         self.tabs.addTab(self.shipwreck_tab, SHIPWRECK_TEXT)
-        self.tabs.addTab(IndicatorTab(), 'Indicator')
+        self.tabs.addTab(IndicatorTab(status_simulation_param.value), 'Indicator')
         self.tabs.currentChanged.connect(self.changed_tabs)
         root_layout.addWidget(self.tabs)
 

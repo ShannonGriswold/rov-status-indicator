@@ -16,6 +16,7 @@ from rclpy.qos import qos_profile_system_default
 from gui.gui_node import GUINode
 from gui.styles.custom_styles import WidgetState
 from gui.widgets.circle import CircleIndicator
+from gui.widgets.logger import Logger
 from rov_msgs.msg import Flooding, StatusIPAddress, VehicleState
 
 TOPIC_CHANGE_VEHICLE_STATE = '/indicator/changeVehicleState'
@@ -32,7 +33,7 @@ class IndicatorTab(QWidget):
     signal = pyqtSignal(VehicleState)
     flooding_signal = pyqtSignal(Flooding)
 
-    def __init__(self) -> None:
+    def __init__(self, simulation:bool) -> None:
         super().__init__()
 
         self.armed = False
@@ -56,7 +57,16 @@ class IndicatorTab(QWidget):
 
         root_layout = QVBoxLayout()
         root_layout.addWidget(self.create_indicator_group())
-        root_layout.addWidget(self.create_simulation_group())
+
+        bottom_layout = QHBoxLayout()
+
+        if simulation:
+            bottom_layout.addWidget(self.create_simulation_group())
+
+        bottom_layout.addWidget(Logger())
+
+        root_layout.addLayout(bottom_layout)
+
         root_layout.addStretch()
         self.setLayout(root_layout)
 
@@ -190,7 +200,6 @@ class IndicatorTab(QWidget):
         simulation_layout.setColumnStretch(2, 1)
         simulation_layout.setColumnStretch(3, 1)
         simulation_layout.setColumnStretch(4, 1)
-        simulation_layout.setColumnStretch(5, 3)
 
         simulation_group.setLayout(simulation_layout)
 
