@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import json
-import logging
+
+# Uncomment if using paho logging
+# import logging
 import threading
 import time
 from typing import Any
@@ -82,7 +84,10 @@ class LampService:
         client.message_callback_add(TOPIC_FLASH_FLOOD, self.on_message_flash_flood)
 
         client.on_message = self.default_on_message
-        logging.basicConfig(level=logging.DEBUG)
+
+        # Uncomment to recieve paho logging
+        # logging.basicConfig(level=logging.DEBUG)
+
         return client
 
     def serve(self) -> None:
