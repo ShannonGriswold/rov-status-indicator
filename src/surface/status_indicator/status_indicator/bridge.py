@@ -38,6 +38,7 @@ MAX_STARTUP_WAIT_SECS: float = 10.0
 
 
 class BridgeNode(Node):
+
     def __init__(self) -> None:
         super().__init__('bridge', parameter_overrides=[])
 
@@ -72,6 +73,15 @@ class BridgeNode(Node):
             IpStatus, ROS_TOPIC_ADD_STATUS_INDICATOR, callback=self.ip_add_service_callback
         )
 
+        self.most_recent_vehicle_state = {
+            'armed': False,
+            'pi_connected': False,
+            'ardusub_connected': False
+        }
+        self.most_recent_flooding = {
+            'flooding': False
+        }
+
     def remote_on_connect(
         self,
         client: mqtt.Client,
@@ -81,6 +91,11 @@ class BridgeNode(Node):
         _properties: paho.mqtt.properties.Properties | None,
     ) -> None:
         self.get_logger().info(f'Connected with reason code: {reason_code}')
+
+        client.publish(MQTT_TOPIC_VEHICLE_STATE, 
+                       json.dumps(self.most_recent_vehicle_state).encode('utf-8'), qos=1)
+        client.publish(MQTT_TOPIC_FLOODING, json.dumps(self.most_recent_flooding).encode('utf-8'),
+                       qos=1)
 
         client.subscribe(MQTT_TOPIC_ARM, qos=1)
 
@@ -170,6 +185,8 @@ class BridgeNode(Node):
             'pi_connected': message.pi_connected,
         }
 
+        self.most_recent_vehicle_state = state
+
         payload = json.dumps(state).encode('utf-8')
 
         for remote_client in self.remote_clients:
@@ -179,6 +196,8 @@ class BridgeNode(Node):
         flooding = {
             'flooding': message.flooding,
         }
+
+        self.most_recent_flooding = flooding
 
         payload = json.dumps(flooding).encode('utf-8')
 

@@ -51,8 +51,8 @@
             </tr>
         </table>
         {% if user.is_superuser %}
-            <button id="arm-btn" @click="sendArm(true)">Arm</button>
-            <button id="disarm-btn" @click="sendArm(false)">Disarm</button>
+            <button id="arm-btn" @click="sendArm(true)" :disabled="!ardusub_connected">Arm</button>
+            <button id="disarm-btn" @click="sendArm(false)" :disabled="!ardusub_connected">Disarm</button>
         {% endif %}
     </div>
 
