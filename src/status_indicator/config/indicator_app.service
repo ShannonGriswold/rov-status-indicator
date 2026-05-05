@@ -1,0 +1,22 @@
+[Unit]
+Description=Lampi app service
+After=multi-user.target
+# Note: Touch device accessed via stable by-path symlink in Kivy config
+# (/dev/input/by-path/platform-3f804000.i2c-event) - no event# dependency needed
+
+[Service]
+User=pi
+Type=simple
+Restart=always
+WorkingDirectory=/home/pi/rov-status-indicator/src/status_indicator
+# Trixie SDL2/Kivy environment configuration with dynamic DRM device detection
+# DRM card numbering varies between boots, so we detect via stable SPI path symlink
+Environment=LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libudev.so.1
+Environment=SDL_VIDEODRIVER=kmsdrm
+# Verify required devices exist before starting (fail fast with clear error)
+ExecStartPre=/bin/bash -c 'test -e /dev/input/by-path/platform-3f804000.i2c-event || { echo "ERROR: Touch device not found at /dev/input/by-path/platform-3f804000.i2c-event"; exit 1; }'
+ExecStartPre=/bin/bash -c 'test -e /dev/dri/by-path/platform-*spi*-card || { echo "ERROR: DRM device not found at /dev/dri/by-path/platform-*spi*-card"; exit 1; }'
+ExecStart=/bin/bash -c 'export SDL_KMSDRM_DEVICE_INDEX=$$(readlink /dev/dri/by-path/platform-*spi*-card 2>/dev/null | sed "s|../card||"); exec /home/pi/lampi-venv/bin/python3 main.py'
+
+[Install]
+WantedBy=multi-user.target
