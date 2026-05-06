@@ -137,10 +137,7 @@ function indicatorController() {
         return;
       }
 
-      console.log("recieved a message");
-
       if (topic === CONFIG.topics.vehicleState) {
-        console.log("recieved vehicleState");
         this.onVehicleStateMessage(payload);
       }
 

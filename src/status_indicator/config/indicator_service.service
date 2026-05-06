@@ -1,0 +1,13 @@
+[Unit]
+Description=Lampi service service
+After=multi-user.target
+
+[Service]
+User=pi
+Type=simple
+Restart=always
+WorkingDirectory=/home/pi/rov-status-indicator/src/status_indicator
+ExecStart=/home/pi/lampi-venv/bin/python3 indicator_service.py
+
+[Install]
+WantedBy=multi-user.target

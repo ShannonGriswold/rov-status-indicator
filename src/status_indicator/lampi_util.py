@@ -27,13 +27,13 @@ def get_ip_address(ifname: str) -> str:
                 struct.pack('256s', bytes(ifname[:15], 'utf-8')),
             )[20:24]
         )
-    except Exception:
+    except Exception:  # noqa: BLE001
         return ''
 
 
 def get_device_id() -> str:
     try:
-        mac_addr = open(DEVICE_ID_FILENAME).read().strip()
+        mac_addr = open(DEVICE_ID_FILENAME).read().strip()  # noqa: PTH123, SIM115
         return mac_addr.replace(':', '')
-    except Exception:
+    except Exception:  # noqa: BLE001
         return 'UNKNOWN'

@@ -2,38 +2,44 @@ import json
 from typing import Any
 
 import lampi_util
+import paho
 import paho.mqtt.client as mqtt
-from kivy.app import App
-
-from kivy.clock import Clock
 import pigpio
-from typing import Any, Optional
+from kivy.app import App
+from kivy.clock import Clock
 from kivy.properties import BooleanProperty, StringProperty
-from kivy.uix.popup import Popup
+from kivy.uix.button import Button
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
-import paho.mqtt.client as mqtt
-from paho.mqtt.client import Client, CallbackAPIVersion
-from lamp_common import *
-from kivy.uix.gridlayout import *
-from kivy.uix.button import *
-import lampi_util
-from kivy.graphics import Color
-MQTT_CLIENT_ID = "lampi_ui"
+from kivy.uix.popup import Popup
+from lamp_common import (
+    MQTT_BROKER_HOST,
+    MQTT_BROKER_KEEP_ALIVE_SECS,
+    MQTT_BROKER_PORT,
+    TOPIC_ARM,
+    TOPIC_FLASH_FLOOD,
+    TOPIC_FLOODING_STATE,
+    TOPIC_VEHICLE_STATE,
+)
+from paho.mqtt.client import Client
+
+MQTT_CLIENT_ID = 'lampi_ui'
 
 class IndicatorApp(App):
-    gpio17_pressed = BooleanProperty(False)
+    gpio17_pressed = BooleanProperty(False)  # noqa: FBT003
     arm_text = StringProperty('Disarmed')
     ardusub_text = StringProperty('Ardusub Disconnected')
     pi_text = StringProperty('Pi Disconnected')
     flooding_text = StringProperty('No Water Detected')
-    armed = BooleanProperty(False)
-    flooding = BooleanProperty(False)
-    pi_connected = BooleanProperty(False)
-    ardusub_connected = BooleanProperty(False)
+    armed = BooleanProperty(False)  # noqa: FBT003
+    flooding = BooleanProperty(False)  # noqa: FBT003
+    pi_connected = BooleanProperty(False)  # noqa: FBT003
+    ardusub_connected = BooleanProperty(False)  # noqa: FBT003
 
     def on_start(self) -> None:
         self.mqtt: Client = Client(
-            callback_api_version=CallbackAPIVersion.VERSION2, client_id=MQTT_CLIENT_ID
+            callback_api_version=paho.mqtt.enums.CallbackAPIVersion.VERSION2,
+            client_id=MQTT_CLIENT_ID
         )
         self.mqtt.enable_logger()
         self.mqtt.on_connect = self.on_connect
@@ -46,11 +52,11 @@ class IndicatorApp(App):
 
     def on_connect(
         self,
-        client: Client,
-        userdata: Any,
-        flags: mqtt.ConnectFlags,
-        reason_code: mqtt.ReasonCode,
-        properties: mqtt.Properties | None,
+        _client: Client,
+        _userdata: Any,  # noqa: ANN401
+        _flags: mqtt.ConnectFlags,
+        _reason_code: paho.mqtt.reasoncodes.ReasonCode,
+        _properties: paho.mqtt.properties.Properties | None,
     ) -> None:
         self.mqtt.message_callback_add(TOPIC_VEHICLE_STATE, self.receive_vehicle_state)
         self.mqtt.subscribe(TOPIC_VEHICLE_STATE, qos=1)
@@ -58,21 +64,21 @@ class IndicatorApp(App):
         self.mqtt.subscribe(TOPIC_FLOODING_STATE, qos=1)
 
     def receive_vehicle_state(
-        self, client: Client, userdata: Any, message: mqtt.MQTTMessage
+        self, _client: Client, _userdata: Any, message: mqtt.MQTTMessage  # noqa: ANN401
     ) -> None:
         try:
             new_state = json.loads(message.payload.decode('utf-8'))
-            Clock.schedule_once(lambda dt: self._update_ui(new_state), 0.01)
-        except Exception:
+            Clock.schedule_once(lambda _dt: self._update_ui(new_state), 0.01)
+        except Exception:  # noqa: BLE001
             print('Invalid vehicle state')
 
     def receive_flooding_state(
-        self, client: Client, userdata: Any, message: mqtt.MQTTMessage
+        self, _client: Client, _userdata: Any, message: mqtt.MQTTMessage  # noqa: ANN401
     ) -> None:
         try:
             new_state = json.loads(message.payload.decode('utf-8'))
-            Clock.schedule_once(lambda dt: self._update_ui_flooding(new_state), 0.01)
-        except Exception:
+            Clock.schedule_once(lambda _dt: self._update_ui_flooding(new_state), 0.01)
+        except Exception:  # noqa: BLE001
             print('Invalid flooding state')
 
     def send_arm(self) -> None:
@@ -132,43 +138,47 @@ class IndicatorApp(App):
     def _build_flooding_popup(self) -> Popup:
         layout = GridLayout(cols = 1, padding = 10)
 
-        popupLabel = Label(text = "WATER DETECTED!", size_hint_y = 0.75)
-        closeButton = Button(text = "Dismiss", size_hint_y = 0.25, background_normal='', background_color=(1,0,0,1))
+        popup_label = Label(text = 'WATER DETECTED!', size_hint_y = 0.75)
+        close_button = Button(
+            text = 'Dismiss',
+            size_hint_y = 0.25,
+            background_normal='',
+            background_color=(1,0,0,1)
+        )
 
-        layout.add_widget(popupLabel)
-        layout.add_widget(closeButton)
+        layout.add_widget(popup_label)
+        layout.add_widget(close_button)
 
         # Instantiate the modal popup and display
         popup = Popup(title ='Flooding Status',
                       content = layout,
                       size_hint =(1, 1), auto_dismiss=False)
         # Attach close button press with popup.dismiss action
-        closeButton.bind(on_press = self.press_button)
+        close_button.bind(on_press = self.press_button)
         return popup
 
-    def press_button(self, instance):
+    def press_button(self, _instance:Button) -> None:
         self.flooding_popup.dismiss()
         msg = {'flash': False}
         message = json.dumps(msg).encode('utf-8')
-        print(f"publishing flass flood message: {message}")
         self.mqtt.publish(TOPIC_FLASH_FLOOD, message, qos=1)
 
     def update_popup_ip_address(self, instance: Popup) -> None:
-        """Update the popup with the current IP address"""
+        """Update the popup with the current IP address."""
         interface = 'wlan0'
         ipaddr = lampi_util.get_ip_address(interface)
         deviceid = lampi_util.get_device_id()
         msg = f'{interface}: {ipaddr}\nDeviceID: {deviceid}'
         instance.content.text = msg
 
-    def update_popUp_flooding(self, instance: Popup) -> None:
-        msg = "WATER DETECTED!"
+    def update_popup_flooding(self, instance: Popup) -> None:
+        msg = 'WATER DETECTED!'
         instance.content.text = msg
 
 
 
-    def on_gpio17_pressed(self, instance: Any, value: bool) -> None:
-        """Open or close the popup depending on the provided value"""
+    def on_gpio17_pressed(self, _instance: Any, value: bool) -> None:  # noqa: ANN401, FBT001
+        """Open or close the popup depending on the provided value."""
         if value:
             self.network_status_popup.open()
         else:

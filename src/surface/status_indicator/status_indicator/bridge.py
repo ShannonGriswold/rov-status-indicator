@@ -1,6 +1,8 @@
 #!/home/shannongriswold/connected-devices/rov-status-indicator/.venv/bin/python
 import json
-import logging
+
+# Uncomment if using paho debug messages
+# import logging
 import time
 from typing import Any
 
@@ -12,8 +14,7 @@ from rclpy.qos import qos_profile_system_default
 from std_msgs.msg import Bool
 
 from rov_msgs.msg import Flooding, VehicleState
-from rov_msgs.srv import VehicleArming
-from rov_msgs.srv import IpStatus
+from rov_msgs.srv import IpStatus, VehicleArming
 
 SIMULATION_ROS_TOPICS = {
     'vehicleState': '/indicator/vehicleState',
@@ -21,7 +22,11 @@ SIMULATION_ROS_TOPICS = {
     'arm': '/indicator/arm',
 }
 
-REAL_ROS_TOPICS = {'vehicleState': 'vehicle_state_event', 'flooding': 'flooding', 'arm': 'arming'}
+REAL_ROS_TOPICS = {
+    'vehicleState': 'vehicle_state_event',
+    'flooding': 'flooding',
+    'arm': 'arming'
+}
 
 ROS_TOPIC_ADD_STATUS_INDICATOR = 'addStatusIndicator'
 
@@ -46,7 +51,8 @@ class BridgeNode(Node):
 
         self.topics = SIMULATION_ROS_TOPICS if self.simulation_param else REAL_ROS_TOPICS
 
-        logging.basicConfig(level=logging.DEBUG)
+        # Uncomment to recieve paho debug messages
+        # logging.basicConfig(level=logging.DEBUG)
 
         self.vehicle_state_subscriber = self.create_subscription(
             VehicleState,
@@ -68,7 +74,7 @@ class BridgeNode(Node):
         self.arm_client = self.create_client(VehicleArming, 'arming')
 
         self.remote_clients: list[mqtt.Client] = []
-        
+
         self.ip_add_service = self.create_service(
             IpStatus, ROS_TOPIC_ADD_STATUS_INDICATOR, callback=self.ip_add_service_callback
         )
@@ -92,14 +98,14 @@ class BridgeNode(Node):
     ) -> None:
         self.get_logger().info(f'Connected with reason code: {reason_code}')
 
-        client.publish(MQTT_TOPIC_VEHICLE_STATE, 
+        client.publish(MQTT_TOPIC_VEHICLE_STATE,
                        json.dumps(self.most_recent_vehicle_state).encode('utf-8'), qos=1)
         client.publish(MQTT_TOPIC_FLOODING, json.dumps(self.most_recent_flooding).encode('utf-8'),
                        qos=1)
 
         client.subscribe(MQTT_TOPIC_ARM, qos=1)
 
-    def connect_to_remote(self, remote_client: mqtt.Client, ip_addr: str, port: int) -> None:
+    def connect_to_remote(self, remote_client: mqtt.Client, ip_addr: str, port: int) -> bool:
         start_time = time.time()
         while True:
             try:
@@ -107,9 +113,8 @@ class BridgeNode(Node):
                 try:
                     remote_client.connect(ip_addr, port=port, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
                 except TimeoutError:
-                    self.get_logger().error("Invalid ip address port pair, try again")
+                    self.get_logger().error('Invalid ip address port pair, try again')
                     return False
-                    
                 break
             except ConnectionRefusedError:
                 current_time = time.time()
@@ -120,13 +125,12 @@ class BridgeNode(Node):
                     )
                     time.sleep(1)
                 else:
-                    self.get_logger().error("Invalid ip address port pair, try again")
+                    self.get_logger().error('Invalid ip address port pair, try again')
                     return False
         self.get_logger().info('Connected to remote broker')
         remote_client.loop_start()
         return True
-    
-    
+
     def ip_add_service_callback(
         self, request: IpStatus.Request, response: IpStatus.Response
     ) -> IpStatus.Response:
@@ -150,11 +154,10 @@ class BridgeNode(Node):
             response.connected = True
         else:
             response.connected = False
-        
+
         response.ip_address = request.ip_address
         response.port = request.port
         return response
-        
 
     def remote_on_disconnect(
         self,
@@ -222,10 +225,6 @@ class BridgeNode(Node):
                 response = self.arm_client.call(request)
                 if not response or not response.message_sent:
                     self.get_logger().warning('Failed to arm or disarm')
-
- 
-       
-            
 
 def main() -> None:
     rclpy.init()

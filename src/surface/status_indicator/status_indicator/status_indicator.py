@@ -50,7 +50,6 @@ class StatusIndicatorNode(Node):
         )
 
     def arm_callback(self, message: Bool) -> None:
-        print(f'Armed: {message.data}')
         if self.ardusub_connected:
             self.armed = message.data
             new_message = VehicleState(
@@ -60,10 +59,9 @@ class StatusIndicatorNode(Node):
             )
             self.vehicle_state_publisher.publish(new_message)
 
-        print('Cannot change armed state while ardusub is disconnected')
+        self.get_logger().warn('Cannot change armed state while ardusub is disconnected')
 
     def change_vehicle_state_callback(self, message: VehicleState) -> None:
-        print('Changing simulated vehicle state')
         self.pi_connected = message.pi_connected
         self.ardusub_connected = message.ardusub_connected
 
@@ -85,8 +83,6 @@ class StatusIndicatorNode(Node):
         self.vehicle_state_publisher.publish(new_message)
 
     def change_flooding_callback(self, message: Flooding) -> None:
-        print('Changing simulated flooding state')
-
         self.flooding = message.flooding
 
         new_message = Flooding(flooding=self.flooding)
