@@ -3,6 +3,7 @@ import json
 
 # Uncomment if using paho debug messages
 # import logging
+import socket
 import time
 from typing import Any
 
@@ -112,7 +113,7 @@ class BridgeNode(Node):
                 self.get_logger().info('trying to connect to remote broker')
                 try:
                     remote_client.connect(ip_addr, port=port, keepalive=MQTT_BROKER_KEEP_ALIVE_SECS)
-                except TimeoutError:
+                except (TimeoutError, socket.gaierror):
                     self.get_logger().error('Invalid ip address port pair, try again')
                     return False
                 break
